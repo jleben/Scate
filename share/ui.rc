@@ -1,0 +1,21 @@
+<!DOCTYPE kpartgui>
+<gui name="Scate" library="libkatescate" version="2">
+<MenuBar>
+ <Menu name="supercollider"><text>S&amp;uperCollider</text>
+    <Action name="scate_switch_lang" />
+    <Action name="scate_restart_lang" />
+    <separator/>
+    <Action name="scate_start_server"/>
+    <Action name="scate_stop_server"/>
+    <separator/>
+    <Action name="scate_start_swingosc" />
+    <Action name="scate_stop_swingosc" />
+    <separator/>
+    <Action name="scate_evaluate" />
+    <Action name="scate_browse_class" />
+    <Action name="scate_stop_proc" />
+    <separator/>
+    <Action name="scate_clear" />
+ </Menu>
+</MenuBar>
+</gui>

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Kate/Plugin
+X-KDE-Library=katescateplugin
+X-Kate-Version=2.9
+Name=Scate
+Comment=Kate SuperCollider plugin
+

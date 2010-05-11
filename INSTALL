@@ -1,0 +1,23 @@
+SCATE INSTALLATION
+
+The following should build Scate and install it into KDE locations relative to "/usr/local":
+
+  cmake .
+  make
+  make install
+
+You should then add "/usr/local" to your KDEDIRS environment variable.
+
+Alternatively, you can execute:
+
+  cmake -DCMAKE_INSTALL_PREFIX=/some/path
+
+instead of "cmake ." to change install location (for example to where KDE is installed -
+- in that case you do not need to change KDEDIRS).
+
+In order for KDE to discover newly installed Kate plugin you should then execute:
+
+  kbuildsycoca4
+
+or restart KDE. Next time you run Kate, Scate will appear under Plugins section of Kate's
+configuration window where you can turn the plugin on.

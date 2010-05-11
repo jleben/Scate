@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="SuperCollider" version="1.00" kateversion="2.4" section="Sources" extensions="*.sc">
+
+  <highlighting>
+    <list name="keywords">
+      <item> arg </item>
+      <item> var </item>
+      <item> classvar </item>
+      <item> if </item>
+      <item> for </item>
+      <item> forBy </item>
+      <item> while </item>
+      <item> switch </item>
+      <item> case </item>
+      <item> do </item>
+      <item> loop </item>
+      <item> fork </item>
+      <item> false </item>
+      <item> true </item>
+      <item> all </item>
+      <item> nil </item>
+      <item> inf </item>
+      <item> super </item>
+      <item> this </item>
+    </list>
+    <list name="specialValues">
+    </list>
+
+    <contexts>
+      <context name="normal" attribute="Normal" lineEndContext="#pop" >
+        <DetectSpaces/>
+        <keyword String="keywords" attribute="Keyword" context="#stay" />
+        <keyword String="specialValues" attribute="SpecialValues" context="#stay" />
+        <DetectChar char="\" attribute="String" context="symbolAlias"  />
+        <DetectChar char="$" attribute="String" context="char"  />
+        <DetectChar char="&quot;" attribute="String" context="string"  />
+        <DetectChar char="&apos;" attribute="String" context="symbol"  />
+        <Detect2Chars char="/" char1="/" attribute="Comment" context="oneLineComment"/>
+        <Detect2Chars char="/" char1="*" attribute="Comment" context="multiLineComment" beginRegion="Comment"/>
+        <Int attribute="Int" context="#stay"/>
+        <Float attribute="Float" context="#stay"/>
+        <RegExpr String="[a-z][A-Za-z0-9]*" attribute="Normal" context="#stay"/>
+        <RegExpr String="[A-Z][A-Za-z0-9]*" attribute="Class" context="#stay"/>
+      </context>
+      <context name="string" attribute="String" lineEndContext="#stay">
+        <DetectChar char="&quot;" attribute="String" context="#pop"/>
+        <RegExpr String="\\." attribute="Char" context="#stay"/>
+      </context>
+      <context name="symbol" attribute="String" lineEndContext="#pop">
+        <DetectChar char="&apos;" attribute="String" context="#pop"/>
+        <RegExpr String="\\." attribute="Char" context="#stay"/>
+      </context>
+      <context name="symbolAlias" attribute="String" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
+        <!--<DetectChar char=" " attribute="NormalText" context="#pop"/>-->
+        <DetectIdentifier attribute="String" context="#stay"/>
+      </context>
+      <context name="char" attribute="String" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
+        <RegExpr String="\\." attribute="Char" context="#pop"/>
+        <RegExpr String="." attribute="String" context="#pop"/>
+      </context>
+      <context name="oneLineComment" attribute="Comment" lineEndContext="#pop">
+        <LineContinue attribute="Comment" context="#pop"/>
+      </context>
+      <context name="multiLineComment" attribute="Comment" lineEndContext="#stay">
+        <Detect2Chars char="*" char1="/" attribute="Comment" context="#pop" endRegion="Comment"/>
+      </context>
+      <context name="eatNonClassIdent" attribute="Normal" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
+        <DetectIdentifier attribute="Int" context="#stay"/>
+      </context>
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal" defStyleNum="dsNormal" spellChecking="false"/>
+      <itemData name="Keyword" defStyleNum="dsKeyword" spellChecking="false" />
+      <itemData name="String" defStyleNum="dsString" spellChecking="false" />
+      <itemData name="Comment" defStyleNum="dsString" />
+      <itemData name="Int" defStyleNum="dsDecVal" spellChecking="false" />
+      <itemData name="Float" defStyleNum="dsFloat" spellChecking="false" />
+      <itemData name="Char" defStyleNum="dsChar" spellChecking="false" />
+      <itemData name="SpecialValues" defStyleNum="dsBaseN" spellChecking="false" />
+      <itemData name="Class" defStyleNum="dsDataType" spellChecking="false" />
+    </itemDatas>
+  </highlighting>
+
+  <general>
+    <comments>
+      <comment name="singleLine" start="//" />
+      <comment name="multiLine" start="/*" end="*/" />
+    </comments>
+    <keywords casesensitive="1"/>
+  </general>
+
+</language>
+
