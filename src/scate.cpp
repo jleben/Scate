@@ -303,17 +303,17 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   setComponentData( ScatePluginFactory::componentData() );
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
-  QWidget *w = mainWindow()->createToolView(
+  toolView = mainWindow()->createToolView(
     "Scate",
     Kate::MainWindow::Bottom,
     QPixmap( plugin->iconPath() ),
     "SuperCollider" );
 
-  QWidget *toolbox = new QWidget (w);
+  QWidget *w = new QWidget (toolView);
   QLayout *l = new QVBoxLayout;
   l->setContentsMargins(0,0,0,0);
   l->setSpacing(0);
-  toolbox->setLayout(l);
+  w->setLayout(l);
 
   scOutView = new QTextEdit;
   scOutView->setReadOnly( true );
@@ -394,7 +394,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
 ScateView::~ScateView()
 {
   mainWindow()->guiFactory()->removeClient( this );
-  delete scOutView->parentWidget(); //delete the "tool view"
+  delete toolView;
 }
 
 void ScateView::langStatusChanged( bool b_switch )

@@ -114,6 +114,7 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     void evaluateCmdLine();
   private:
     ScatePlugin *plugin;
+    QWidget *toolView;
     QTextEdit *scOutView;
     QLineEdit *cmdLine;
     QAction *aLangSwitch;
