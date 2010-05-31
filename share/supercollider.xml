@@ -26,6 +26,12 @@
     </list>
     <list name="specialValues">
     </list>
+    <list name="alerts">
+      <item> TODO </item>
+      <item> NOTE </item>
+      <item> WARNING </item>
+      <item> FIXME </item>
+    </list>
 
     <contexts>
       <context name="normal" attribute="Normal" lineEndContext="#pop" >
@@ -40,8 +46,9 @@
         <Detect2Chars char="/" char1="*" attribute="Comment" context="multiLineComment" beginRegion="Comment"/>
         <Int attribute="Int" context="#stay"/>
         <Float attribute="Float" context="#stay"/>
-        <RegExpr String="[a-z][A-Za-z0-9]*" attribute="Normal" context="#stay"/>
-        <RegExpr String="[A-Z][A-Za-z0-9]*" attribute="Class" context="#stay"/>
+        <RegExpr String="_[A-Za-z0-9_]*" attribute="Primitive" context="#stay"/>
+        <RegExpr String="[a-z][A-Za-z0-9_]*" attribute="Normal" context="#stay"/>
+        <RegExpr String="[A-Z][A-Za-z0-9_]*" attribute="Class" context="#stay"/>
       </context>
       <context name="string" attribute="String" lineEndContext="#stay">
         <DetectChar char="&quot;" attribute="String" context="#pop"/>
@@ -60,13 +67,12 @@
         <RegExpr String="." attribute="String" context="#pop"/>
       </context>
       <context name="oneLineComment" attribute="Comment" lineEndContext="#pop">
+        <keyword String="alerts" attribute="Alerts" context="#stay"/>
         <LineContinue attribute="Comment" context="#pop"/>
       </context>
       <context name="multiLineComment" attribute="Comment" lineEndContext="#stay">
+        <keyword String="alerts" attribute="Alerts" context="#stay"/>
         <Detect2Chars char="*" char1="/" attribute="Comment" context="#pop" endRegion="Comment"/>
-      </context>
-      <context name="eatNonClassIdent" attribute="Normal" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
-        <DetectIdentifier attribute="Int" context="#stay"/>
       </context>
     </contexts>
 
@@ -74,12 +80,14 @@
       <itemData name="Normal" defStyleNum="dsNormal" spellChecking="false"/>
       <itemData name="Keyword" defStyleNum="dsKeyword" spellChecking="false" />
       <itemData name="String" defStyleNum="dsString" spellChecking="false" />
-      <itemData name="Comment" defStyleNum="dsString" />
+      <itemData name="Comment" defStyleNum="dsComment" />
       <itemData name="Int" defStyleNum="dsDecVal" spellChecking="false" />
       <itemData name="Float" defStyleNum="dsFloat" spellChecking="false" />
       <itemData name="Char" defStyleNum="dsChar" spellChecking="false" />
       <itemData name="SpecialValues" defStyleNum="dsBaseN" spellChecking="false" />
       <itemData name="Class" defStyleNum="dsDataType" spellChecking="false" />
+      <itemData name="Primitive" defStyleNum="dsFunction" spellChecking="false" />
+      <itemData name="Alerts" defStyleNum="dsAlert" spellChecking="false" />
     </itemDatas>
   </highlighting>
 
