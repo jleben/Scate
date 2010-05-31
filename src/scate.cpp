@@ -64,14 +64,14 @@ popen2(const char *command, int *infp, int *outfp)
   else if (pid == 0)
   {
     setpgid( getpid(), getpid() );
-  close(p_stdin[WRITE]);
-  dup2(p_stdin[READ], READ);
-  close(p_stdout[READ]);
-  dup2(p_stdout[WRITE], WRITE);
-  execl("/bin/sh", "sh", "-c", command, NULL);
-  perror("execl");
-  printf("child exiting\n");
-  exit(1);
+    close(p_stdin[WRITE]);
+    dup2(p_stdin[READ], READ);
+    close(p_stdout[READ]);
+    dup2(p_stdout[WRITE], WRITE);
+    execl("/bin/sh", "sh", "-c", command, NULL);
+    perror("execl");
+    printf("child exiting\n");
+    exit(1);
   }
 
   if (infp == NULL)
@@ -125,6 +125,7 @@ ScatePlugin::ScatePlugin( QObject* parent, const QList<QVariant>& )
 ScatePlugin::~ScatePlugin()
 {
   stopLang();
+  cleanup();
 }
 
 Kate::PluginView *ScatePlugin::createView( Kate::MainWindow *mainWindow )
@@ -172,6 +173,7 @@ void ScatePlugin::startLang()
   scThread = new SCThread( pipeR );
   connect( scThread, SIGNAL( scSays( const QString& ) ),
            this, SIGNAL( scSaid( const QString& ) ), Qt::QueuedConnection );
+  connect( scThread, SIGNAL( finished() ), this, SLOT( cleanup() ) );
   scThread->start();
   emit( langSwitched( true ) );
 }
@@ -180,30 +182,46 @@ void ScatePlugin::stopLang()
 {
   if( scThread && scThread->isRunning() )
   {
-      printf("terminating SC\n");
       if( scPid != 0 )
       {
-        if( killpg( scPid, SIGTERM ) == -1 )
-        {
-          printf("Could not kill SC!\n");
-        }
+        printf("killing SC\n");
+        int pid = scPid;
+        scPid = 0;
+        if( killpg( pid, SIGINT ) == -1 )
+          printf("could not kill SC!\n");
         else
-          waitpid( scPid, NULL, 0 );
+          waitpid( pid, NULL, 0 );
       }
       printf("terminated sclang\n");
-      close( pipeR );
-      close( pipeW );
-      printf("closed reading pipe\n");
       scThread->wait();
-      printf("SC thread terminated\n");
-      delete scThread;
-      scThread = 0;
-      scPid = pipeR = pipeW = 0;
-      emit( langSwitched( false ) );
-      emit( serverSwitched( false ) );
+      printf("SC thread finished\n");
   }
   else
       printf("not running\n");
+}
+
+void ScatePlugin::cleanup()
+{
+  if( !scThread ) return;
+
+  if( scPid != 0 )
+  {
+    printf("killing SC\n");
+    if( killpg( scPid, SIGINT ) == -1 )
+      printf("could not kill SC!\n");
+    else
+      waitpid( scPid, NULL, 0 );
+  }
+
+  close( pipeR );
+  close( pipeW );
+  delete scThread;
+  scThread = 0;
+  scPid = pipeR = pipeW = 0;
+  emit( langSwitched( false ) );
+  emit( serverSwitched( false ) );
+  emit scSaid("\nInterpreter stopped.\n");
+  printf("cleaned up\n");
 }
 
 void ScatePlugin::startServer()

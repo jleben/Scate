@@ -73,6 +73,8 @@ class  ScatePlugin :
     void stopSwingOSC();
     void eval( const QString&, bool silent = false );
     void stopProcessing();
+  private slots:
+    void cleanup();
   private:
     void startLang();
     void stopLang();
