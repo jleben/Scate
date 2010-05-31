@@ -195,6 +195,7 @@ void ScatePlugin::stopLang()
       printf("terminated sclang\n");
       scThread->wait();
       printf("SC thread finished\n");
+      cleanup();
   }
   else
       printf("not running\n");
@@ -202,7 +203,7 @@ void ScatePlugin::stopLang()
 
 void ScatePlugin::cleanup()
 {
-  if( !scThread ) return;
+  if( !scThread || scThread->isRunning() ) return;
 
   if( scPid != 0 )
   {
