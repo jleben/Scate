@@ -8,7 +8,10 @@ able to access the Scate configuration page in the same window.
 By default, the SuperCollider intepreter is not started when Scate is. You can
 change this on Scate configuration page.
 
-There you can also set the SuperCollider runtime data path and the full path
+Default command for SuperCollider interpreter is "sclang". You can override
+that by specifying the command yourself.
+
+You can also set the SuperCollider runtime data path and the full path
 with filename of SwingOSC GUI server java program.
 
 ********************************************************************************

@@ -158,8 +158,11 @@ void ScatePlugin::startLang()
   }
 
   KConfigGroup config(KGlobal::config(), "Scate");
+  QString exe = config.readEntry( "ScLangExecutable", QString() );
   QString rtDir = config.readEntry( "RuntimeDataDir", DEFAULT_DATA_DIR );
-  QString cmd = tr( "sclang -i scate" );
+
+  QString cmd = exe.isEmpty() ? tr( "sclang" ) : exe;
+  cmd += tr( " -i scate" );
   if( !rtDir.isEmpty() ) cmd.append( " -d " ).append( rtDir );
 
   printf("Trying to start with command:\n");
@@ -529,12 +532,19 @@ ScateConfigPage::ScateConfigPage( ScatePlugin *, QWidget *parent )
   : Kate::PluginConfigPage( parent )
 {
   QFormLayout *layout = new QFormLayout( this );
+
+  sclangExeEdit = new QLineEdit();
+  layout->addRow( new QLabel( i18n( "SC Lang program (full path)" ) ),
+                  sclangExeEdit );
+
   dataDirEdit = new QLineEdit();
   layout->addRow( new QLabel( i18n( "Runtime data directory" ) ),
                   dataDirEdit );
+
   swingOscDirEdit = new QLineEdit();
   layout->addRow( new QLabel( i18n( "SwingOSC program filename" ) ),
                   swingOscDirEdit );
+
   startLangCheck = new QCheckBox( );
   layout->addRow( new QLabel( i18n( "Start interpreter with plugin" ) ),
                   startLangCheck );
@@ -544,15 +554,17 @@ ScateConfigPage::ScateConfigPage( ScatePlugin *, QWidget *parent )
 void ScateConfigPage::apply()
 {
   KConfigGroup config(KGlobal::config(), "Scate");
-  config.writeEntry("RuntimeDataDir", dataDirEdit->text() );
-  config.writeEntry("SwingOscProgram", swingOscDirEdit->text() );
-  config.writeEntry("StartLang", startLangCheck->isChecked() );
+  config.writeEntry( "ScLangExecutable", sclangExeEdit->text() );
+  config.writeEntry( "RuntimeDataDir", dataDirEdit->text() );
+  config.writeEntry( "SwingOscProgram", swingOscDirEdit->text() );
+  config.writeEntry( "StartLang", startLangCheck->isChecked() );
   config.sync();
 }
 
 void ScateConfigPage::reset()
 {
   KConfigGroup config(KGlobal::config(), "Scate");
+  sclangExeEdit->setText( config.readEntry( "ScLangExecutable", QString() ) );
   dataDirEdit->setText( config.readEntry( "RuntimeDataDir", DEFAULT_DATA_DIR ) );
   swingOscDirEdit->setText( config.readEntry( "SwingOscProgram", QString() ) );
   startLangCheck->setChecked( config.readEntry( "StartLang", false ) );
@@ -560,9 +572,13 @@ void ScateConfigPage::reset()
 
 void ScateConfigPage::defaults()
 {
+  sclangExeEdit->clear();
   dataDirEdit->setText( DEFAULT_DATA_DIR );
   swingOscDirEdit->clear();
+  startLangCheck->setChecked( false );
+
   KConfigGroup config(KGlobal::config(), "scate");
+  config.writeEntry( "ScLangExecutable", QString() );
   config.writeEntry( "RuntimeDataDir", DEFAULT_DATA_DIR );
   config.writeEntry( "SwingOscProgram", QString() );
   config.writeEntry( "StartLang", false );

@@ -145,6 +145,7 @@ class ScateConfigPage : public Kate::PluginConfigPage
     void defaults();
     void reset();
   private:
+    QLineEdit *sclangExeEdit;
     QLineEdit *dataDirEdit;
     QLineEdit *swingOscDirEdit;
     QCheckBox *startLangCheck;
