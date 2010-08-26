@@ -1,24 +1,33 @@
-SCATE CONFIGURATION AND USAGE
+********************************************************************************
+SCATE CONFIGURATION
+********************************************************************************
 
-After you enable the Scate plugin in Kate's configuration window, you will be able to access
-the Scate configuration page in the same window.
+After you enable the Scate plugin in Kate's configuration window, you will be
+able to access the Scate configuration page in the same window.
 
-By default, the SuperCollider intepreter is not started when Scate is. You can change this on
-Scate configuration page.
+By default, the SuperCollider intepreter is not started when Scate is. You can
+change this on Scate configuration page.
 
-There you can also set the SuperCollider runtime data path and the full path with filename
-of SwingOSC GUI server java program.
+There you can also set the SuperCollider runtime data path and the full path
+with filename of SwingOSC GUI server java program.
 
-Enabling the Scate plugin will add the "SuperCollider" menu to Kate's main menu bar with options
-to control the interpreter, sound server, SwingOSC server and more.
+********************************************************************************
+SCATE USAGE
+********************************************************************************
 
-Scate will also add a tab to Kate's bottom tool area where the interpreter's output will be printed.
+Enabling the Scate plugin will add the "SuperCollider" menu to Kate's main menu
+bar with options to control the interpreter, sound server, SwingOSC server and
+more.
+
+Scate will also add a tab to Kate's bottom tool area where the interpreter's
+output will be printed.
 
 When the interpreter is running, you can execute code in two ways:
 
-1. Below the interpreter output area there is a command line where you can simply type in
-SuperCollider commands and execute them by pressing "Enter". You can access previously executed
-commands with "Up" and "Down" keys.
+1. Below the interpreter output area there is a command line where you can
+simply type in SuperCollider commands and execute them by pressing "Enter". You
+can access previously executed commands with "Up" and "Down" keys.
 
-2. You can let the interpreter evaluate SuperCollider code within a Kate document by selecting
-it and invoking Ctrl+E shortcut or invoking respective action in SuperCollider menu.
+2. You can let the interpreter evaluate SuperCollider code within a Kate
+document by selecting it and invoking Ctrl+E shortcut or invoking respective
+action in SuperCollider menu.

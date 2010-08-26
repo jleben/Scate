@@ -1,23 +1,45 @@
+********************************************************************************
 SCATE INSTALLATION
+********************************************************************************
 
-The following should build Scate and install it into KDE locations relative to "/usr/local":
+--------------------------------------------------------------------------------
+1.A Default installation prefix
+--------------------------------------------------------------------------------
+ The following should build Scate and install it into KDE locations relative
+to the default installation prefix (usually "/usr/local"):
 
   cmake .
   make
-  make install
+  (sudo) make install
 
-You should then add "/usr/local" to your KDEDIRS environment variable.
+You should then add the installation prefix to your KDEDIRS environment
+variable, if it is not the same as the prefix of your KDE installation.
 
-Alternatively, you can execute:
+--------------------------------------------------------------------------------
+1.B Avoid setting KDEDIRS - specify installation prefix
+--------------------------------------------------------------------------------
+If you want to avoid setting the KDEDIRS environment variable, you can replace
+the first command in 1.A with
 
-  cmake -DCMAKE_INSTALL_PREFIX=/some/path
+  cmake -DCMAKE_INSTALL_PREFIX=<kde installation prefix>
 
-instead of "cmake ." to change install location (for example to where KDE is installed -
-- in that case you do not need to change KDEDIRS).
+to make the installation prefix match the one of KDE installation (usually
+"/usr"). The rest is the same as in 1.A
 
-In order for KDE to discover newly installed Kate plugin you should then execute:
+--------------------------------------------------------------------------------
+2. Rebuild the KDE system configuration cache
+--------------------------------------------------------------------------------
+
+In order for KDE to discover newly installed Kate plugin you should either
+execute:
 
   kbuildsycoca4
 
-or restart KDE. Next time you run Kate, Scate will appear under Plugins section of Kate's
+or restart KDE.
+
+--------------------------------------------------------------------------------
+3. Enable the Scate plugin in Kate
+--------------------------------------------------------------------------------
+
+Next time you run Kate, Scate will appear under Plugins section of Kate's
 configuration window where you can turn the plugin on.
