@@ -438,15 +438,19 @@ void ScateCmdLine::keyPressEvent( QKeyEvent *e )
 
     case Qt::Key_Up:
       if( curHistory < history.count() - 1 ) {
+          blockSignals(true);
           setText( history[++curHistory] );
+          blockSignals(false);
       }
       break;
 
     case Qt::Key_Down:
       if( curHistory > -1 ) {
           --curHistory;
+          blockSignals(true);
           if( curHistory == -1 ) clear();
           else setText( history[curHistory] );
+          blockSignals(false);
       }
       break;
 
