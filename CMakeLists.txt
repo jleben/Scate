@@ -23,7 +23,7 @@ include_directories( ${KDE4_INCLUDES} )
 
 set(SCATE_SOURCES src/scate.cpp )
 kde4_add_plugin(katescateplugin ${SCATE_SOURCES})
-target_link_libraries(katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces )
+target_link_libraries(katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor )
 
 ########### install files ###############
 install(TARGETS katescateplugin  DESTINATION ${PLUGIN_INSTALL_DIR} )

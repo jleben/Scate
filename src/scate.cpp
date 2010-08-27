@@ -373,7 +373,7 @@ void ScateView::evaluateSelection()
       text = view->selectionText();
   else
   {
-      //text = view->document()->line( view->cursorPosition().line() );
+      text = view->document()->line( view->cursorPosition().line() );
   }
   if( !text.isEmpty() ) plugin->eval( text );
 }
