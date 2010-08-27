@@ -36,9 +36,6 @@
 #include <KConfigGroup>
 #include <kstandarddirs.h>
 
-#include <signal.h>
-#include <wait.h>
-
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QKeyEvent>
@@ -46,59 +43,19 @@
 
 #define DEFAULT_DATA_DIR ""
 
-#define READ 0
-#define WRITE 1
-
-pid_t
-popen2(const char *command, int *infp, int *outfp)
+SCProcess::SCProcess( QObject *parent ) : QProcess( parent )
 {
-  int p_stdin[2], p_stdout[2];
-  pid_t pid;
-
-  if (pipe(p_stdin) != 0 || pipe(p_stdout) != 0)
-  return -1;
-
-  pid = fork();
-  if (pid < 0)
-  return pid;
-  else if (pid == 0)
-  {
-    setpgid( getpid(), getpid() );
-    close(p_stdin[WRITE]);
-    dup2(p_stdin[READ], READ);
-    close(p_stdout[READ]);
-    dup2(p_stdout[WRITE], WRITE);
-    execl("/bin/sh", "sh", "-c", command, NULL);
-    perror("execl");
-    printf("child exiting\n");
-    exit(1);
-  }
-
-  if (infp == NULL)
-  {
-    close(p_stdin[WRITE]);
-    close(p_stdin[READ]);
-  }
-  else
-  {
-    close(p_stdin[READ]);
-    *infp = p_stdin[WRITE];
-  }
-  if (outfp == NULL)
-  {
-    close(p_stdout[WRITE]);
-    close(p_stdout[READ]);
-  }
-  else
-  {
-    close(p_stdout[WRITE]);
-    *outfp = p_stdout[READ];
-  }
-  return pid;
+  connect( this, SIGNAL( readyRead() ), this, SLOT( onReadyRead() ) );
 }
 
-#undef READ
-#undef WRITE
+void SCProcess::onReadyRead()
+{
+  QByteArray bytes = readAll();
+  if( bytes.isEmpty() ) return;
+  QString text( bytes );
+  emit scSays( text );
+}
+
 
 /*************************** PLUGIN ***************************/
 
@@ -110,12 +67,15 @@ K_EXPORT_PLUGIN( ScatePluginFactory( KAboutData("katescateplugin", 0,
 
 ScatePlugin::ScatePlugin( QObject* parent, const QList<QVariant>& )
     : Kate::Plugin( (Kate::Application*)parent, "kate-scate-plugin" ),
-    scThread( 0 ),
-    scPid( 0 ),
-    pipeW( 0 ),
-    pipeR( 0 ),
-    _iconPath( KStandardDirs::locate( "data", "kate/plugins/katescate/supercollider.png" ) )
+    scProcess( new SCProcess( this ) ),
+    _iconPath( KStandardDirs::locate( "data", "kate/plugins/katescate/supercollider.png" ) ),
+    restart( false )
 {
+  connect( scProcess, SIGNAL( started() ), this, SLOT( scStarted() ) );
+  connect( scProcess, SIGNAL( finished( int, QProcess::ExitStatus ) ),
+           this, SLOT( scFinished( int, QProcess::ExitStatus ) ) );
+  connect( scProcess, SIGNAL( scSays( const QString& ) ),
+           this, SIGNAL( scSaid( const QString& ) ) );
   KConfigGroup config(KGlobal::config(), "Scate");
   bool b_startLang = config.readEntry( "StartLang", false );
   if( b_startLang )
@@ -124,8 +84,6 @@ ScatePlugin::ScatePlugin( QObject* parent, const QList<QVariant>& )
 
 ScatePlugin::~ScatePlugin()
 {
-  stopLang();
-  cleanup();
 }
 
 Kate::PluginView *ScatePlugin::createView( Kate::MainWindow *mainWindow )
@@ -151,11 +109,20 @@ Kate::PluginConfigPage * ScatePlugin::configPage (uint number=0, QWidget *parent
 
 void ScatePlugin::startLang()
 {
-  if( scThread )
-  {
-      printf("already running\n");
+  QProcess::ProcessState state = scProcess->state();
+  if( state == QProcess::Starting ) {
+      printf("\nInterpreter already starting.\n\n");
       return;
   }
+  else if( state == QProcess::Running ) {
+      printf("\nInterpreter already running.\n\n");
+      return;
+  }
+  else if( state != QProcess::NotRunning ) {
+    return;
+  }
+
+  sysMsg( "Interpreter starting." );
 
   KConfigGroup config(KGlobal::config(), "Scate");
   QString exe = config.readEntry( "ScLangExecutable", QString() );
@@ -168,64 +135,41 @@ void ScatePlugin::startLang()
   printf("Trying to start with command:\n");
   printf( "%s\n", cmd.toStdString().c_str() );
 
-  if ( ( scPid = popen2( cmd.toStdString().c_str(), &pipeW, &pipeR) ) <= 0)
-  {
-      printf("Unable to exec sc!\n");
-      return;
-  }
-  scThread = new SCThread( pipeR );
-  connect( scThread, SIGNAL( scSays( const QString& ) ),
-           this, SIGNAL( scSaid( const QString& ) ), Qt::QueuedConnection );
-  connect( scThread, SIGNAL( finished() ), this, SLOT( cleanup() ) );
-  scThread->start();
-  emit( langSwitched( true ) );
+  scProcess->start( cmd );
 }
 
 void ScatePlugin::stopLang()
 {
-  if( scThread && scThread->isRunning() )
-  {
-      if( scPid != 0 )
-      {
-        printf("killing SC\n");
-        int pid = scPid;
-        scPid = 0;
-        if( killpg( pid, SIGINT ) == -1 )
-          printf("could not kill SC!\n");
-        else
-          waitpid( pid, NULL, 0 );
-      }
-      printf("terminated sclang\n");
-      scThread->wait();
-      printf("SC thread finished\n");
-      cleanup();
-  }
-  else
-      printf("not running\n");
+  scProcess->terminate();
 }
 
-void ScatePlugin::cleanup()
+void ScatePlugin::sysMsg( const QString &msg )
 {
-  if( !scThread || scThread->isRunning() ) return;
+  emit scSaid(tr("\n") + msg + tr("\n\n"));
+}
 
-  if( scPid != 0 )
-  {
-    printf("killing SC\n");
-    if( killpg( scPid, SIGINT ) == -1 )
-      printf("could not kill SC!\n");
-    else
-      waitpid( scPid, NULL, 0 );
+void ScatePlugin::scStarted()
+{
+  emit langSwitched( true );
+}
+
+void ScatePlugin::scFinished( int exitCode, QProcess::ExitStatus exitStatus )
+{
+  Q_UNUSED( exitCode );
+  QString msg;
+  switch( exitStatus ) {
+    /*case QProcess::CrashExit:
+      msg = "ERROR: Interpreter crashed!"; break;*/
+    case QProcess::NormalExit:
+    default:
+      msg = "Interpreter stopped.";
   }
 
-  close( pipeR );
-  close( pipeW );
-  delete scThread;
-  scThread = 0;
-  scPid = pipeR = pipeW = 0;
+  sysMsg( msg );
   emit( langSwitched( false ) );
   emit( serverSwitched( false ) );
-  emit scSaid("\nInterpreter stopped.\n");
-  printf("cleaned up\n");
+
+  if( restart ) startLang();
 }
 
 void ScatePlugin::startServer()
@@ -255,6 +199,7 @@ void ScatePlugin::stopSwingOSC()
 
 void ScatePlugin::switchLang( bool on )
 {
+  restart = false;
   if( on ) startLang();
   else stopLang();
 }
@@ -274,47 +219,31 @@ void ScatePlugin::switchSwingOsc( bool on )
 void ScatePlugin::stopProcessing()
 {
   eval( "thisProcess.stop;", true );
-  emit scSaid( "\nAll processing stopped\n" );
+  sysMsg( "All processing stopped." );
 }
 
 void ScatePlugin::eval( const QString& cmd, bool silent )
 {
   if( !langRunning() ) {
-    emit scSaid( "\nInterpreter not running!\n" );
+    sysMsg( "Interpreter not running!" );
     return;
   }
 
   QString str = cmd + ( silent ? "\x1b" : "\x0c" );
-  int written = write( pipeW, str.toStdString().c_str(), str.length() );
+  scProcess->write( str.toAscii() );
 }
 
 void ScatePlugin::restartLang()
 {
+  restart = true;
   stopLang();
-  emit scSaid( "\n" );
-  startLang();
 }
 
 bool ScatePlugin::langRunning()
-{ return scThread && scThread->isRunning(); }
+{ return scProcess->state() != QProcess::NotRunning; }
 
 bool ScatePlugin::serverRunning()
 { return false; }
-
-SCThread::SCThread( int p ) : pipe(p) { pipe = p;}
-
-void SCThread::run()
-{
-  printf("starting to read SC pipe\n");
-  char buf[128];
-  memset (buf, 0x0, sizeof(buf));
-  int bytesRead;
-  while( ( bytesRead = read(pipe, buf, 127) ) > 0 ) {
-    buf[bytesRead] = 0;
-    emit scSays( buf );
-  }
-  printf("finished reading SC pipe\n");
-}
 
 /*********************** VIEW ******************************/
 

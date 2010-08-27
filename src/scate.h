@@ -33,8 +33,9 @@
 #include <QCheckBox>
 #include <QAction>
 #include <QStringList>
+#include <QProcess>
 
-class SCThread;
+class SCProcess;
 
 class  ScatePlugin :
   public Kate::Plugin,
@@ -74,27 +75,26 @@ class  ScatePlugin :
     void eval( const QString&, bool silent = false );
     void stopProcessing();
   private slots:
-    void cleanup();
+    void scStarted();
+    void scFinished( int, QProcess::ExitStatus );
   private:
     void startLang();
     void stopLang();
-    SCThread *scThread;
-    int scPid;
-    int pipeW;
-    int pipeR;
+    void sysMsg( const QString & );
+    SCProcess *scProcess;
     QString _iconPath;
+    bool restart;
 };
 
-class SCThread : public QThread
+class SCProcess : public QProcess
 {
-  Q_OBJECT;
+  Q_OBJECT
   public:
-    SCThread( int p );
+    SCProcess( QObject *parent = 0 );
   signals:
     void scSays( const QString& str );
-  private:
-    void run();
-    int pipe;
+  private slots:
+    void onReadyRead();
 };
 
 class ScateView : public Kate::PluginView, public KXMLGUIClient
