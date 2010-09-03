@@ -1,0 +1,9 @@
+--------------------------------------------------------------------------------
+Changes from Scate 0.9.3 to 0.9.4
+--------------------------------------------------------------------------------
+
+- Command to start sclang can be configured.
+
+- When evaluating code, current line is evaluated if no text is selected.
+
+- When browsing command history, text is not crossfaded and thus more readable.
