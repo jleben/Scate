@@ -169,7 +169,10 @@ void ScatePlugin::scFinished( int exitCode, QProcess::ExitStatus exitStatus )
   emit( langSwitched( false ) );
   emit( serverSwitched( false ) );
 
-  if( restart ) startLang();
+  if( restart ) {
+    restart = false;
+    startLang();
+  }
 }
 
 void ScatePlugin::startServer()
