@@ -35,9 +35,12 @@
 #include <kaboutdata.h>
 #include <KConfigGroup>
 #include <kstandarddirs.h>
+#include <khtmlview.h>
 
 #include <QFormLayout>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QToolButton>
 #include <QKeyEvent>
 #include <QLabel>
 
@@ -252,36 +255,15 @@ bool ScatePlugin::serverRunning()
 
 ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
-    plugin( plugin_ )
+    plugin( plugin_ ),
+    outputView(0),
+    helpView(0)
 {
   setComponentData( ScatePluginFactory::componentData() );
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
-  toolView = mainWindow()->createToolView(
-    "Scate",
-    Kate::MainWindow::Bottom,
-    QPixmap( plugin->iconPath() ),
-    "SuperCollider" );
-
-  QWidget *w = new QWidget (toolView);
-  QLayout *l = new QVBoxLayout;
-  l->setContentsMargins(0,0,0,0);
-  l->setSpacing(0);
-  w->setLayout(l);
-
-  scOutView = new QTextEdit;
-  scOutView->setReadOnly( true );
-  connect( plugin, SIGNAL( scSaid( const QString& ) ),
-           this, SLOT( scSaid( const QString& ) ) );
-  l->addWidget( scOutView );
-
-  cmdLine = new ScateCmdLine;
-  connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
-           plugin, SLOT( eval( const QString&, bool ) ) );
-  /*cmdLine = new QLineEdit;
-  connect( cmdLine, SIGNAL( returnPressed() ),
-           this, SLOT( evaluateCmdLine() ) );*/
-  l->addWidget( cmdLine );
+  createOutputView();
+  createHelpView();
 
   KAction *a;
 
@@ -348,7 +330,55 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
 ScateView::~ScateView()
 {
   mainWindow()->guiFactory()->removeClient( this );
-  delete toolView;
+  delete outputView;
+  delete helpView;
+}
+
+void ScateView::createOutputView()
+{
+  if( outputView ) return;
+
+  outputView = mainWindow()->createToolView(
+    "SC Output",
+    Kate::MainWindow::Bottom,
+    QPixmap( plugin->iconPath() ),
+    "SuperCollider"
+  );
+
+  QWidget *w = new QWidget (outputView);
+  QLayout *l = new QVBoxLayout;
+  l->setContentsMargins(0,0,0,0);
+  l->setSpacing(0);
+  w->setLayout(l);
+
+  scOutView = new QTextEdit;
+  scOutView->setReadOnly( true );
+  connect( plugin, SIGNAL( scSaid( const QString& ) ),
+           this, SLOT( scSaid( const QString& ) ) );
+  l->addWidget( scOutView );
+
+  cmdLine = new ScateCmdLine;
+  connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
+           plugin, SLOT( eval( const QString&, bool ) ) );
+  /*cmdLine = new QLineEdit;
+  connect( cmdLine, SIGNAL( returnPressed() ),
+           this, SLOT( evaluateCmdLine() ) );*/
+  l->addWidget( cmdLine );
+}
+
+void ScateView::createHelpView()
+{
+  if( helpView ) return;
+
+  QWidget *helpView = mainWindow()->createToolView (
+    "SC Help",
+    Kate::MainWindow::Bottom,
+    QPixmap( plugin->iconPath() ),
+    "SC Help"
+  );
+
+  ScateHelpWidget *help = new ScateHelpWidget( helpView );
+  help->goHome();
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -415,6 +445,110 @@ void ScateView::evaluateCmdLine()
   cmdLine->clear();
 }
 
+ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
+  QWidget( parent ),
+  homeUrl( KUrl("file:///usr/local/share/SuperCollider/Help/Help.html") ),
+  curHistIndex( 0 )
+{
+  QVBoxLayout *box = new QVBoxLayout;
+  box->setContentsMargins(0,0,0,0);
+  setLayout(box);
+
+  QHBoxLayout *toolBox = new QHBoxLayout;
+  toolBox->setContentsMargins(0,0,0,0);
+  box->addLayout( toolBox );
+
+  QToolButton *homeButton = new QToolButton();
+  homeButton->setText("Home");
+  toolBox->addWidget( homeButton );
+
+  QToolButton *backButton = new QToolButton();
+  backButton->setText("Back");
+  toolBox->addWidget( backButton );
+
+  QToolButton *forwardButton = new QToolButton();
+  forwardButton->setText("Forward");
+  toolBox->addWidget( forwardButton );
+
+  toolBox->addStretch(1);
+
+  browser = new KHTMLPart();
+  box->addWidget( browser->view() );
+
+  connect( browser->browserExtension(),
+            SIGNAL( openUrlRequest(const KUrl &,
+                                    const KParts::OpenUrlArguments &,
+                                    const KParts::BrowserArguments & ) ),
+            this,
+            SLOT( openUrl(const KUrl &) ) );
+  /*connect( browser->browserExtension(), SIGNAL( openUrlNotify() ),
+           this, SLOT( updateHistory() ) );*/
+  connect( homeButton, SIGNAL(clicked()), this, SLOT(goHome()) );
+  connect( backButton, SIGNAL(clicked()), this, SLOT(goBack()) );
+  connect( forwardButton, SIGNAL(clicked()), this, SLOT(goForward()) );
+}
+
+void ScateHelpWidget::goHome()
+{
+  openUrl( homeUrl );
+}
+
+void ScateHelpWidget::goBack()
+{
+  if( history.count() && curHistIndex > 0 ) {
+    if( browser->openUrl( history[curHistIndex-1] ) )
+      curHistIndex--;
+  }
+}
+
+void ScateHelpWidget::goForward()
+{
+  if( curHistIndex < history.count() - 1 ) {
+    if( browser->openUrl( history[curHistIndex+1] ) )
+      curHistIndex++;
+  }
+}
+
+void ScateHelpWidget::openUrl( const KUrl &url  )
+{
+  if( browser->openUrl( url ) ) {
+    updateHistory();
+    curHistIndex = history.count() - 1;
+  }
+}
+
+static void printHistory( const QList<KUrl> &urls)
+{
+  printf("URLS are:\n");
+  Q_FOREACH( KUrl url, urls ) {
+    printf("%s\n", url.url().toStdString().c_str());
+  }
+}
+
+void ScateHelpWidget::updateHistory()
+{
+  printHistory( history );
+
+  int c = history.count();
+  if( !c || history[curHistIndex] != browser->url() ) {
+
+    c--;
+    while( c > curHistIndex ) {
+      history.removeLast();
+      c--;
+    }
+
+    printHistory( history );
+
+    history.append( browser->url() );
+
+    if( history.count() >= 5 ) {
+      history.removeFirst();
+    }
+  }
+
+  printHistory( history );
+}
 
 ScateCmdLine::ScateCmdLine()
   : curHistory( -1 )

@@ -26,6 +26,7 @@
 #include <kate/plugin.h>
 #include <kate/pluginconfigpageinterface.h>
 #include <kxmlguiclient.h>
+#include <khtml_part.h>
 
 #include <QThread>
 #include <QTextEdit>
@@ -97,6 +98,8 @@ class SCProcess : public QProcess
     void onReadyRead();
 };
 
+class ScateHelpWidget;
+
 class ScateView : public Kate::PluginView, public KXMLGUIClient
 {
     Q_OBJECT
@@ -115,12 +118,38 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     void scSaid( const QString& );
     void evaluateCmdLine();
   private:
+    void createOutputView();
+    void createHelpView();
+
     ScatePlugin *plugin;
-    QWidget *toolView;
+
+    QWidget *outputView;
     QTextEdit *scOutView;
     QLineEdit *cmdLine;
+
+    QWidget *helpView;
+
     QAction *aLangSwitch;
     QList<QAction*> langDepActions;
+};
+
+class ScateHelpWidget : public QWidget
+{
+  Q_OBJECT
+  public:
+    ScateHelpWidget( QWidget * parent = 0 );
+  public slots:
+    void goHome();
+    void goBack();
+    void goForward();
+  private slots:
+    void openUrl( const KUrl & );
+    void updateHistory();
+  private:
+    KHTMLPart *browser;
+    KUrl homeUrl;
+    QList<KUrl> history;
+    int curHistIndex;
 };
 
 class ScateCmdLine : public QLineEdit
