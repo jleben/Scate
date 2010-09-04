@@ -13,6 +13,7 @@
     <separator/>
     <Action name="scate_evaluate" />
     <Action name="scate_browse_class" />
+    <Action name="scate_class_help" />
     <Action name="scate_stop_proc" />
     <separator/>
     <Action name="scate_clear" />

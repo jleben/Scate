@@ -39,10 +39,13 @@
 
 #include <QFormLayout>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QToolBar>
 #include <QToolButton>
 #include <QKeyEvent>
 #include <QLabel>
+#include <QDir>
+#include <QDirIterator>
+#include <QMessageBox>
 
 #define DEFAULT_DATA_DIR ""
 
@@ -257,7 +260,8 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
     plugin( plugin_ ),
     outputView(0),
-    helpView(0)
+    helpView(0),
+    helpWidget(0)
 {
   setComponentData( ScatePluginFactory::componentData() );
   setXMLFile( "kate/plugins/katescate/ui.rc" );
@@ -311,6 +315,11 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   connect( a, SIGNAL( triggered(bool) ), this, SLOT( browseSelectedClass() ) );
   langDepActions.append(a);
 
+  a = actionCollection()->addAction( "scate_class_help" );
+  a->setText( i18n("Find Help for Class") );
+  a->setShortcut( Qt::CTRL | Qt::Key_H );
+  connect( a, SIGNAL( triggered(bool) ), this, SLOT( helpForSelectedClass() ) );
+
   a = actionCollection()->addAction( "scate_stop_proc" );
   a->setText( i18n("Stop All Processing") );
   a->setShortcut( Qt::Key_Escape );
@@ -342,7 +351,7 @@ void ScateView::createOutputView()
     "SC Output",
     Kate::MainWindow::Bottom,
     QPixmap( plugin->iconPath() ),
-    "SuperCollider"
+    "SC Output"
   );
 
   QWidget *w = new QWidget (outputView);
@@ -377,8 +386,8 @@ void ScateView::createHelpView()
     "SC Help"
   );
 
-  ScateHelpWidget *help = new ScateHelpWidget( helpView );
-  help->goHome();
+  helpWidget = new ScateHelpWidget( helpView );
+  helpWidget->goHome();
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -421,6 +430,16 @@ void ScateView::browseSelectedClass()
   }
 }
 
+void ScateView::helpForSelectedClass()
+{
+  KTextEditor::View *view = mainWindow()->activeView();
+  if( view->selection() )
+  {
+      QString text = view->selectionText();
+      helpWidget->goToClass( text );
+  }
+}
+
 void ScateView::readSessionConfig( KConfigBase* config, const QString& groupPrefix )
 {
   // If you have session-dependant settings, load them here.
@@ -445,46 +464,110 @@ void ScateView::evaluateCmdLine()
   cmdLine->clear();
 }
 
+ScateUrlHistory::ScateUrlHistory( QObject *parent ) :
+  QObject( parent ),
+  curIndex(0)
+{
+  QAction *a;
+
+  a = KStandardAction::back( this, SLOT(goBack()), this );
+  _actions.append( a );
+
+  a = KStandardAction::forward( this, SLOT(goForward()), this );
+  _actions.append( a );
+}
+
+QList<QAction*> ScateUrlHistory::actions()
+{
+  return _actions;
+}
+
+void ScateUrlHistory::goBack()
+{
+  if( history.count() && curIndex > 0 ) {
+    curIndex--;
+    emit wentTo( history[curIndex] );
+  }
+}
+
+void ScateUrlHistory::goForward()
+{
+  if( curIndex < history.count() - 1 ) {
+    curIndex++;
+    emit wentTo( history[curIndex] );
+  }
+}
+
+void ScateUrlHistory::goTo( const KUrl &url  )
+{
+  int c = history.count();
+  if( c && history[curIndex] == url ) return;
+
+  c--;
+  while( c > curIndex ) {
+    history.removeLast();
+    c--;
+  }
+
+  history.append( url );
+
+  if( history.count() >= 25 ) {
+    history.removeFirst();
+  }
+
+  curIndex = history.count() - 1;
+
+  emit wentTo( history[curIndex] );
+}
+
+void ScateUrlHistory::print()
+{
+  printf("URLS are:\n");
+  Q_FOREACH( KUrl url, history ) {
+    printf("%s\n", url.url().toStdString().c_str());
+  }
+}
+
+
 ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
   QWidget( parent ),
-  curHistIndex( 0 )
+  _history( new ScateUrlHistory( this ) )
 {
   QVBoxLayout *box = new QVBoxLayout;
   box->setContentsMargins(0,0,0,0);
+  box->setSpacing(0);
   setLayout(box);
 
-  QHBoxLayout *toolBox = new QHBoxLayout;
-  toolBox->setContentsMargins(0,0,0,0);
-  box->addLayout( toolBox );
+  QToolBar *toolBar = new QToolBar;
 
-  QToolButton *homeButton = new QToolButton();
-  homeButton->setText("Home");
-  toolBox->addWidget( homeButton );
+  QAction *a = KStandardAction::home( this, SLOT(goHome()), this );
+  toolBar->addAction(a);
 
-  QToolButton *backButton = new QToolButton();
-  backButton->setText("Back");
-  toolBox->addWidget( backButton );
+  QList<QAction*> historyActions = _history->actions();
+  foreach( QAction *a, historyActions ) {
+    toolBar->addAction( a );
+  }
 
-  QToolButton *forwardButton = new QToolButton();
-  forwardButton->setText("Forward");
-  toolBox->addWidget( forwardButton );
-
-  toolBox->addStretch(1);
+  box->addWidget( toolBar );
 
   browser = new KHTMLPart();
+  browser->view()->setFrameStyle( QFrame::StyledPanel | QFrame::Sunken );
   box->addWidget( browser->view() );
 
   connect( browser->browserExtension(),
             SIGNAL( openUrlRequest(const KUrl &,
                                     const KParts::OpenUrlArguments &,
                                     const KParts::BrowserArguments & ) ),
-            this,
-            SLOT( openUrl(const KUrl &) ) );
-  /*connect( browser->browserExtension(), SIGNAL( openUrlNotify() ),
-           this, SLOT( updateHistory() ) );*/
-  connect( homeButton, SIGNAL(clicked()), this, SLOT(goHome()) );
-  connect( backButton, SIGNAL(clicked()), this, SLOT(goBack()) );
-  connect( forwardButton, SIGNAL(clicked()), this, SLOT(goForward()) );
+            _history,
+            SLOT( goTo(const KUrl &) )
+          );
+  connect( _history, SIGNAL(wentTo(const KUrl &)),
+           this, SLOT(openUrl(const KUrl &)) );
+}
+
+void ScateHelpWidget::openUrl( const KUrl &url )
+{
+  browser->openUrl( url );
 }
 
 void ScateHelpWidget::goHome()
@@ -496,65 +579,32 @@ void ScateHelpWidget::goHome()
 
   KUrl helpUrl( helpDir );
   helpUrl.addPath( "Help.html" );
-  openUrl( helpUrl);
+  _history->goTo( helpUrl );
 }
 
-void ScateHelpWidget::goBack()
+void ScateHelpWidget::goToClass( const QString & className )
 {
-  if( history.count() && curHistIndex > 0 ) {
-    if( browser->openUrl( history[curHistIndex-1] ) )
-      curHistIndex--;
+  KConfigGroup config(KGlobal::config(), "Scate");
+  QString helpDirName = config.readEntry( "HelpDir", QString() );
+
+  if( helpDirName.isEmpty() ) return;
+
+  QStringList filters;
+  filters << ( className + ".html" );
+
+  QDir helpDir( helpDirName );
+  helpDir.setNameFilters( filters );
+
+  QDirIterator iter( helpDir, QDirIterator::Subdirectories );
+  if( iter.hasNext() ) {
+    _history->goTo( KUrl( iter.filePath() ) );
+  }
+  else {
+    QString msg = tr("No help file for class '%1' found.").arg( className );
+    QMessageBox::warning( this, "Class help search", msg );
   }
 }
 
-void ScateHelpWidget::goForward()
-{
-  if( curHistIndex < history.count() - 1 ) {
-    if( browser->openUrl( history[curHistIndex+1] ) )
-      curHistIndex++;
-  }
-}
-
-void ScateHelpWidget::openUrl( const KUrl &url  )
-{
-  if( browser->openUrl( url ) ) {
-    updateHistory();
-    curHistIndex = history.count() - 1;
-  }
-}
-
-static void printHistory( const QList<KUrl> &urls)
-{
-  printf("URLS are:\n");
-  Q_FOREACH( KUrl url, urls ) {
-    printf("%s\n", url.url().toStdString().c_str());
-  }
-}
-
-void ScateHelpWidget::updateHistory()
-{
-  printHistory( history );
-
-  int c = history.count();
-  if( !c || history[curHistIndex] != browser->url() ) {
-
-    c--;
-    while( c > curHistIndex ) {
-      history.removeLast();
-      c--;
-    }
-
-    printHistory( history );
-
-    history.append( browser->url() );
-
-    if( history.count() >= 5 ) {
-      history.removeFirst();
-    }
-  }
-
-  printHistory( history );
-}
 
 ScateCmdLine::ScateCmdLine()
   : curHistory( -1 )

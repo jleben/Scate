@@ -113,6 +113,7 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
   public slots:
     void evaluateSelection();
     void browseSelectedClass();
+    void helpForSelectedClass();
   private slots:
     void langStatusChanged( bool );
     void scSaid( const QString& );
@@ -128,9 +129,30 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     QLineEdit *cmdLine;
 
     QWidget *helpView;
+    ScateHelpWidget *helpWidget;
 
     QAction *aLangSwitch;
     QList<QAction*> langDepActions;
+};
+
+class ScateUrlHistory : public QObject
+{
+  Q_OBJECT
+  public:
+    ScateUrlHistory( QObject *parent = 0 );
+    QList<QAction*> actions();
+  signals:
+    void wentTo( const KUrl & );
+  public slots:
+    void goBack();
+    void goForward();
+    void goTo( const KUrl & );
+  private:
+    void print();
+
+    QList<KUrl> history;
+    int curIndex;
+    QList<QAction*> _actions;
 };
 
 class ScateHelpWidget : public QWidget
@@ -138,17 +160,14 @@ class ScateHelpWidget : public QWidget
   Q_OBJECT
   public:
     ScateHelpWidget( QWidget * parent = 0 );
+    ScateUrlHistory *history() { return _history; }
   public slots:
     void goHome();
-    void goBack();
-    void goForward();
-    void openUrl( const KUrl & );
-  private slots:
-    void updateHistory();
+    void goToClass( const QString & className );
+    void openUrl( const KUrl &url );
   private:
     KHTMLPart *browser;
-    QList<KUrl> history;
-    int curHistIndex;
+    ScateUrlHistory *_history;
 };
 
 class ScateCmdLine : public QLineEdit
