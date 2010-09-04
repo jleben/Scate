@@ -142,12 +142,11 @@ class ScateHelpWidget : public QWidget
     void goHome();
     void goBack();
     void goForward();
-  private slots:
     void openUrl( const KUrl & );
+  private slots:
     void updateHistory();
   private:
     KHTMLPart *browser;
-    KUrl homeUrl;
     QList<KUrl> history;
     int curHistIndex;
 };
@@ -176,6 +175,7 @@ class ScateConfigPage : public Kate::PluginConfigPage
   private:
     QLineEdit *sclangExeEdit;
     QLineEdit *dataDirEdit;
+    QLineEdit *helpDirEdit;
     QLineEdit *swingOscDirEdit;
     QCheckBox *startLangCheck;
 };
