@@ -33,6 +33,7 @@
 
 class ScatePlugin;
 class ScateHelpWidget;
+class ScateCmdLine;
 
 class ScateView : public Kate::PluginView, public KXMLGUIClient
 {
@@ -51,7 +52,6 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
   private slots:
     void langStatusChanged( bool );
     void scSaid( const QString& );
-    void evaluateCmdLine();
   private:
     void createOutputView();
     void createHelpView();
@@ -60,7 +60,7 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
 
     QWidget *outputView;
     QTextEdit *scOutView;
-    QLineEdit *cmdLine;
+    ScateCmdLine *cmdLine;
 
     QWidget *helpView;
     ScateHelpWidget *helpWidget;
@@ -105,7 +105,7 @@ class ScateHelpWidget : public QWidget
     ScateUrlHistory *_history;
 };
 
-class ScateCmdLine : public QLineEdit
+class ScateCmdLine : public QWidget
 {
   Q_OBJECT
 
@@ -114,7 +114,9 @@ class ScateCmdLine : public QLineEdit
   signals:
     void invoked( const QString&, bool );
   private:
-    void keyPressEvent( QKeyEvent * );
+    bool eventFilter( QObject *, QEvent * );
+
+    QLineEdit *expr;
     QStringList history;
     int curHistory;
 };

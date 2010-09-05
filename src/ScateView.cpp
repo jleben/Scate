@@ -30,6 +30,7 @@
 
 #include <QVBoxLayout>
 #include <QToolBar>
+#include <QLabel>
 #include <QDir>
 #include <QDirIterator>
 #include <QMessageBox>
@@ -149,9 +150,7 @@ void ScateView::createOutputView()
   cmdLine = new ScateCmdLine;
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
            plugin, SLOT( eval( const QString&, bool ) ) );
-  /*cmdLine = new QLineEdit;
-  connect( cmdLine, SIGNAL( returnPressed() ),
-           this, SLOT( evaluateCmdLine() ) );*/
+
   l->addWidget( cmdLine );
 }
 
@@ -236,12 +235,6 @@ void ScateView::writeSessionConfig( KConfigBase* config, const QString& groupPre
   // see the Kate::Plugin docs for more information.
   Q_UNUSED( config );
   Q_UNUSED( groupPrefix );
-}
-
-void ScateView::evaluateCmdLine()
-{
-  plugin->eval( cmdLine->text(), false );
-  cmdLine->clear();
 }
 
 ScateUrlHistory::ScateUrlHistory( QObject *parent ) :
@@ -422,46 +415,62 @@ void ScateHelpWidget::warnSetHelpDir()
 
 ScateCmdLine::ScateCmdLine()
   : curHistory( -1 )
-{}
-
-void ScateCmdLine::keyPressEvent( QKeyEvent *e )
 {
-  switch( e->key() )
+  QHBoxLayout *l = new QHBoxLayout;
+  l->setContentsMargins(5,0,0,0);
+  setLayout( l );
+
+  QLabel *lbl = new QLabel("Execute:");
+  expr = new QLineEdit;
+
+  l->addWidget(lbl);
+  l->addWidget(expr);
+
+  expr->installEventFilter( this );
+}
+
+bool ScateCmdLine::eventFilter( QObject *, QEvent *e )
+{
+  int type = e->type();
+  if( type != QEvent::KeyPress ) return false;
+
+  QKeyEvent *ke = static_cast<QKeyEvent*>(e);
+
+  switch( ke->key() )
   {
     case Qt::Key_Return:
     case Qt::Key_Enter:
 
-      if( text().isEmpty() ) break;
+      if( expr->text().isEmpty() ) return true;
 
-      emit invoked( text(), false );
-      if( history.count() == 0 || history[0] != text() )
+      emit invoked( expr->text(), false );
+      if( history.count() == 0 || history[0] != expr->text() )
       {
         if( history.count() > 30 ) history.removeAt( history.count() - 1 );
-        history.prepend( text() );
+        history.prepend( expr->text() );
       }
       curHistory = -1;
-      clear();
-      break;
+      expr->clear();
+      return true;
 
     case Qt::Key_Up:
       if( curHistory < history.count() - 1 ) {
-          blockSignals(true);
-          setText( history[++curHistory] );
-          blockSignals(false);
+          expr->blockSignals(true);
+          expr->setText( history[++curHistory] );
+          expr->blockSignals(false);
       }
-      break;
+      return true;
 
     case Qt::Key_Down:
       if( curHistory > -1 ) {
           --curHistory;
-          blockSignals(true);
-          if( curHistory == -1 ) clear();
-          else setText( history[curHistory] );
-          blockSignals(false);
+          expr->blockSignals(true);
+          if( curHistory == -1 ) expr->clear();
+          else expr->setText( history[curHistory] );
+          expr->blockSignals(false);
       }
-      break;
+      return true;
 
-    default:
-      QLineEdit::keyPressEvent( e );
+    default: return false;
   }
 }
