@@ -100,9 +100,11 @@ class ScateHelpWidget : public QWidget
     void goToClass( const QString & className );
     void openUrl( const KUrl &url );
   private:
+    void showEvent( QShowEvent * );
     void warnSetHelpDir();
     KHTMLPart *browser;
     ScateUrlHistory *_history;
+    bool virgin;
 };
 
 class ScateCmdLine : public QWidget

@@ -166,7 +166,6 @@ void ScateView::createHelpView()
   );
 
   helpWidget = new ScateHelpWidget( helpView );
-  helpWidget->goHome();
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -304,7 +303,8 @@ void ScateUrlHistory::print()
 
 ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
   QWidget( parent ),
-  _history( new ScateUrlHistory( this ) )
+  _history( new ScateUrlHistory( this ) ),
+  virgin( true )
 {
   QVBoxLayout *box = new QVBoxLayout;
   box->setContentsMargins(0,0,0,0);
@@ -323,7 +323,7 @@ ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
 
   box->addWidget( toolBar );
 
-  browser = new KHTMLPart();
+  browser = new KHTMLPart(this);
   browser->view()->setFrameStyle( QFrame::StyledPanel | QFrame::Sunken );
   box->addWidget( browser->view() );
 
@@ -397,12 +397,20 @@ void ScateHelpWidget::goToClass( const QString & className )
     QApplication::processEvents();
   }
 
-  if( !url.isValid() ) {
+  if( url.isEmpty() ) {
     QString msg = tr("No help file for class '%1' found.").arg( className );
     QMessageBox::information( this, "SuperCollider Help", msg );
   }
   else {
     _history->goTo( url );
+  }
+}
+
+void ScateHelpWidget::showEvent( QShowEvent *e )
+{
+  if( virgin && browser->url().isEmpty() ) {
+    virgin = false;
+    QMetaObject::invokeMethod( this, "goHome", Qt::QueuedConnection );
   }
 }
 
