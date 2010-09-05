@@ -21,7 +21,12 @@
 find_package(KDE4 REQUIRED)
 include_directories( ${KDE4_INCLUDES} )
 
-set(SCATE_SOURCES src/scate.cpp )
+set(SCATE_SOURCES
+  src/ScatePlugin.cpp
+  src/ScateView.cpp
+  src/ScateConfigPage.cpp
+)
+
 kde4_add_plugin(katescateplugin ${SCATE_SOURCES})
 target_link_libraries(katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor khtml kparts )
 

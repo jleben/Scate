@@ -19,85 +19,19 @@
 #
 */
 
-#ifndef _PLUGIN_KATE_SCATE_H_
-#define _PLUGIN_KATE_SCATE_H_
+#ifndef SCATE_VIEW_H
+#define SCATE_VIEW_H
 
-#include <kate/mainwindow.h>
-#include <kate/plugin.h>
-#include <kate/pluginconfigpageinterface.h>
 #include <kxmlguiclient.h>
 #include <khtml_part.h>
+#include <kate/plugin.h>
+#include <kate/mainwindow.h>
 
-#include <QThread>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QCheckBox>
-#include <QAction>
-#include <QStringList>
-#include <QProcess>
 
-class SCProcess;
-
-class  ScatePlugin :
-  public Kate::Plugin,
-  public Kate::PluginConfigPageInterface
-{
-  Q_OBJECT
-  Q_INTERFACES(Kate::PluginConfigPageInterface)
-
-  public:
-    explicit  ScatePlugin( QObject* parent = 0, const QList<QVariant>& = QList<QVariant>() );
-    virtual ~ ScatePlugin();
-    Kate::PluginView *createView( Kate::MainWindow *mainWindow );
-
-    uint  configPages () const { return 1; }
-    QString configPageFullName (uint number) const;
-    KIcon configPageIcon (uint number) const;
-    QString configPageName (uint number) const;
-    Kate::PluginConfigPage * configPage (uint number, QWidget *parent, const char *name);
-
-    bool langRunning();
-    bool serverRunning();
-    inline QString iconPath() { return _iconPath; }
-  signals:
-    void scSaid( const QString& );
-    void langSwitched( bool );
-    void serverSwitched( bool );
-    void swingOscSwitched( bool );
-  public slots:
-    void switchLang( bool );
-    void switchServer( bool );
-    void switchSwingOsc( bool );
-    void restartLang();
-    void startServer();
-    void stopServer();
-    void startSwingOSC();
-    void stopSwingOSC();
-    void eval( const QString&, bool silent = false );
-    void stopProcessing();
-  private slots:
-    void scStarted();
-    void scFinished( int, QProcess::ExitStatus );
-  private:
-    void startLang();
-    void stopLang();
-    void sysMsg( const QString & );
-    SCProcess *scProcess;
-    QString _iconPath;
-    bool restart;
-};
-
-class SCProcess : public QProcess
-{
-  Q_OBJECT
-  public:
-    SCProcess( QObject *parent = 0 );
-  signals:
-    void scSays( const QString& str );
-  private slots:
-    void onReadyRead();
-};
-
+class ScatePlugin;
 class ScateHelpWidget;
 
 class ScateView : public Kate::PluginView, public KXMLGUIClient
@@ -185,19 +119,4 @@ class ScateCmdLine : public QLineEdit
     int curHistory;
 };
 
-class ScateConfigPage : public Kate::PluginConfigPage
-{
-  public:
-    ScateConfigPage( ScatePlugin *, QWidget * );
-    void apply();
-    void defaults();
-    void reset();
-  private:
-    QLineEdit *sclangExeEdit;
-    QLineEdit *dataDirEdit;
-    QLineEdit *helpDirEdit;
-    QLineEdit *swingOscDirEdit;
-    QCheckBox *startLangCheck;
-};
-
-#endif
+#endif //SCATE_VIEW_H
