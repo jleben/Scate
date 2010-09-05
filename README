@@ -5,25 +5,51 @@ SCATE CONFIGURATION
 After you enable the Scate plugin in Kate's configuration window, you will be
 able to access the Scate configuration page in the same window.
 
-By default, the SuperCollider intepreter is not started when Scate is. You can
-change this on Scate configuration page.
+These are the configuration options:
 
-Default command for SuperCollider interpreter is "sclang". You can override
-that by specifying the command yourself.
+- Sclang command:
+    The command to execute to start SuperCollider intepreter. If empty, the
+    command "sclang" will be executed.
 
-You can also set the SuperCollider runtime data path and the full path
-with filename of SwingOSC GUI server java program.
+- Runtime data directory:
+    The directory for SuperCollider's runtime data.
+
+- Help directory:
+    The directory where SuperCollider help files reside.
+
+- SwingOSC Java program:
+    The full path to SwingOSC java program.
+
+- Start interpreter with plugin:
+    This option controls whether SuperCollider intepreter is started immediately
+    after the Scate plugin is.
+
 
 ********************************************************************************
 SCATE USAGE
 ********************************************************************************
 
-Enabling the Scate plugin will add the "SuperCollider" menu to Kate's main menu
-bar with options to control the interpreter, sound server, SwingOSC server and
-more.
+--------------------------------------------------------------------------------
+USER INTERFACE
+--------------------------------------------------------------------------------
 
-Scate will also add a tab to Kate's bottom tool area where the interpreter's
-output will be printed.
+Enabling the Scate plugin will add the "SuperCollider" menu to Kate's main menu
+bar with options to start or stop the interpreter, sound server, SwingOSC
+server, and more.
+
+Scate will add two tabs to Kate's bottom tool area:
+
+- SC Output: opens the window where the interpreter's output will be printed and
+  code can be executed.
+
+- SC Help: opens the window where you can browse SC help files.
+
+You can move these tabs to another tool area via the menu that pops up when
+you right-click on them.
+
+--------------------------------------------------------------------------------
+CODE EXECUTION
+--------------------------------------------------------------------------------
 
 When the interpreter is running, you can execute code in two ways:
 
