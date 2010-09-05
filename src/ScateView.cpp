@@ -325,7 +325,7 @@ ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
 
   box->addWidget( toolBar );
 
-  browser = new KHTMLPart(this);
+  browser = new KHTMLPart((QWidget*)0, this);
   browser->view()->setFrameStyle( QFrame::StyledPanel | QFrame::Sunken );
   box->addWidget( browser->view() );
 
