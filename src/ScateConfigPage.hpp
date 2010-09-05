@@ -26,8 +26,10 @@
 
 #include <QLineEdit>
 #include <QCheckBox>
+#include <QListWidget>
 
 class ScatePlugin;
+class ScateDirListWidget;
 
 class ScateConfigPage : public Kate::PluginConfigPage
 {
@@ -39,9 +41,23 @@ class ScateConfigPage : public Kate::PluginConfigPage
   private:
     QLineEdit *sclangExeEdit;
     QLineEdit *dataDirEdit;
-    QLineEdit *helpDirEdit;
+    ScateDirListWidget *helpDirList;
     QLineEdit *swingOscDirEdit;
     QCheckBox *startLangCheck;
+};
+
+class ScateDirListWidget : public QWidget
+{
+  Q_OBJECT
+  public:
+    ScateDirListWidget( QWidget *parent = 0 );
+    void setDirs( const QStringList & );
+    QStringList dirs();
+  public slots:
+    void addDir();
+    void removeDir();
+  private:
+    QListWidget *list;
 };
 
 #endif //SCATE_CONFIG_H

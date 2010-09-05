@@ -7,20 +7,21 @@ able to access the Scate configuration page in the same window.
 
 These are the configuration options:
 
-- Sclang command:
+- Sclang Command:
     The command to execute to start SuperCollider intepreter. If empty, the
     command "sclang" will be executed.
 
-- Runtime data directory:
+- Runtime Data Directory:
     The directory for SuperCollider's runtime data.
 
-- Help directory:
-    The directory where SuperCollider help files reside.
+- Help File Directories:
+    One or more directories where Scate will search for SuperCollider help
+    files.
 
-- SwingOSC Java program:
+- SwingOSC Java Program:
     The full path to SwingOSC java program.
 
-- Start interpreter with plugin:
+- Start Interpreter With Plugin:
     This option controls whether SuperCollider intepreter is started immediately
     after the Scate plugin is.
 
