@@ -1,8 +1,12 @@
 --------------------------------------------------------------------------------
-Changes from Scate 0.9.3 to 0.9.4
+Changes from Scate 0.9.3 to current development version
 --------------------------------------------------------------------------------
 
-- Command to start sclang can be configured.
+- Searching and browsing help files is integrated.
+
+- New configuration options:
+    - command to start sclang
+    - multiple directories to search for help files
 
 - When evaluating code, current line is evaluated if no text is selected.
 
