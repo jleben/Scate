@@ -266,6 +266,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   setComponentData( ScatePluginFactory::componentData() );
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
+  //TODO lazy creation
   createOutputView();
   createHelpView();
 
@@ -575,7 +576,10 @@ void ScateHelpWidget::goHome()
   KConfigGroup config(KGlobal::config(), "Scate");
   QString helpDir = config.readEntry( "HelpDir", QString() );
 
-  if( helpDir.isEmpty() ) return;
+  if( helpDir.isEmpty() ) {
+    warnSetHelpDir();
+    return;
+  }
 
   KUrl helpUrl( helpDir );
   helpUrl.addPath( "Help.html" );
@@ -587,7 +591,10 @@ void ScateHelpWidget::goToClass( const QString & className )
   KConfigGroup config(KGlobal::config(), "Scate");
   QString helpDirName = config.readEntry( "HelpDir", QString() );
 
-  if( helpDirName.isEmpty() ) return;
+  if( helpDirName.isEmpty() ) {
+    warnSetHelpDir();
+    return;
+  }
 
   QStringList filters;
   filters << ( className + ".html" );
@@ -597,14 +604,22 @@ void ScateHelpWidget::goToClass( const QString & className )
 
   QDirIterator iter( helpDir, QDirIterator::Subdirectories );
   if( iter.hasNext() ) {
+    QString result = iter.next();
+    qDebug() << tr("Class help search result: %1").arg( result );
     _history->goTo( KUrl( iter.filePath() ) );
   }
   else {
     QString msg = tr("No help file for class '%1' found.").arg( className );
-    QMessageBox::warning( this, "Class help search", msg );
+    QMessageBox::information( this, "SuperCollider Help", msg );
   }
 }
 
+void ScateHelpWidget::warnSetHelpDir()
+{
+  QString msg( "Please set SuperCollider Help directory"
+               " on the Scate configuration panel." );
+  QMessageBox::warning( this, "SuperCollider Help", msg );
+}
 
 ScateCmdLine::ScateCmdLine()
   : curHistory( -1 )

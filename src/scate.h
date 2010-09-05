@@ -166,6 +166,7 @@ class ScateHelpWidget : public QWidget
     void goToClass( const QString & className );
     void openUrl( const KUrl &url );
   private:
+    void warnSetHelpDir();
     KHTMLPart *browser;
     ScateUrlHistory *_history;
 };
