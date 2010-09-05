@@ -58,11 +58,11 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
 
     ScatePlugin *plugin;
 
-    QWidget *outputView;
+    QWidget *outputToolView;
     QTextEdit *scOutView;
     ScateCmdLine *cmdLine;
 
-    QWidget *helpView;
+    QWidget *helpToolView;
     ScateHelpWidget *helpWidget;
 
     QAction *aLangSwitch;
@@ -97,7 +97,7 @@ class ScateHelpWidget : public QWidget
     ScateUrlHistory *history() { return _history; }
   public slots:
     void goHome();
-    void goToClass( const QString & className );
+    bool goToClass( const QString & className );
     void openUrl( const KUrl &url );
   private:
     void showEvent( QShowEvent * );

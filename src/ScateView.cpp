@@ -39,8 +39,8 @@
 ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
     plugin( plugin_ ),
-    outputView(0),
-    helpView(0),
+    outputToolView(0),
+    helpToolView(0),
     helpWidget(0)
 {
   setComponentData( ScatePluginFactory::componentData() );
@@ -120,22 +120,22 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
 ScateView::~ScateView()
 {
   mainWindow()->guiFactory()->removeClient( this );
-  delete outputView;
-  delete helpView;
+  delete outputToolView;
+  delete helpToolView;
 }
 
 void ScateView::createOutputView()
 {
-  if( outputView ) return;
+  if( outputToolView ) return;
 
-  outputView = mainWindow()->createToolView(
+  outputToolView = mainWindow()->createToolView(
     "SC Output",
     Kate::MainWindow::Bottom,
     QPixmap( plugin->iconPath() ),
     "SC Output"
   );
 
-  QWidget *w = new QWidget (outputView);
+  QWidget *w = new QWidget (outputToolView);
   QLayout *l = new QVBoxLayout;
   l->setContentsMargins(0,0,0,0);
   l->setSpacing(0);
@@ -156,16 +156,16 @@ void ScateView::createOutputView()
 
 void ScateView::createHelpView()
 {
-  if( helpView ) return;
+  if( helpToolView ) return;
 
-  helpView = mainWindow()->createToolView (
+  helpToolView = mainWindow()->createToolView (
     "SC Help",
     Kate::MainWindow::Bottom,
     QPixmap( plugin->iconPath() ),
     "SC Help"
   );
 
-  helpWidget = new ScateHelpWidget( helpView );
+  helpWidget = new ScateHelpWidget( helpToolView );
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -214,7 +214,9 @@ void ScateView::helpForSelectedClass()
   if( view->selection() )
   {
       QString text = view->selectionText();
-      helpWidget->goToClass( text );
+      if( helpWidget->goToClass( text ) ) {
+        mainWindow()->showToolView( helpToolView );
+      }
   }
 }
 
@@ -367,14 +369,14 @@ void ScateHelpWidget::goHome()
   QMessageBox::warning( this, "SuperCollider Help", msg );
 }
 
-void ScateHelpWidget::goToClass( const QString & className )
+bool ScateHelpWidget::goToClass( const QString & className )
 {
   KConfigGroup config(KGlobal::config(), "Scate");
   QStringList helpDirNames = config.readPathEntry( "HelpDirs", QStringList() );
 
   if( !helpDirNames.count() ) {
     warnSetHelpDir();
-    return;
+    return false;
   }
 
   QStringList filters;
@@ -400,9 +402,11 @@ void ScateHelpWidget::goToClass( const QString & className )
   if( url.isEmpty() ) {
     QString msg = tr("No help file for class '%1' found.").arg( className );
     QMessageBox::information( this, "SuperCollider Help", msg );
+    return false;
   }
   else {
     _history->goTo( url );
+    return true;
   }
 }
 
