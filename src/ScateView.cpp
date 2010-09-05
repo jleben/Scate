@@ -158,7 +158,7 @@ void ScateView::createHelpView()
 {
   if( helpView ) return;
 
-  QWidget *helpView = mainWindow()->createToolView (
+  helpView = mainWindow()->createToolView (
     "SC Help",
     Kate::MainWindow::Bottom,
     QPixmap( plugin->iconPath() ),
