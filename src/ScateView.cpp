@@ -240,26 +240,26 @@ void ScateView::writeSessionConfig( KConfigBase* config, const QString& groupPre
 
 ScateUrlHistory::ScateUrlHistory( QObject *parent ) :
   QObject( parent ),
-  curIndex(0)
+  curIndex(-1)
 {
-  QAction *a;
-
-  a = KStandardAction::back( this, SLOT(goBack()), this );
-  _actions.append( a );
-
-  a = KStandardAction::forward( this, SLOT(goForward()), this );
-  _actions.append( a );
+  _actions[Back] = KStandardAction::back( this, SLOT(goBack()), this );
+  _actions[Forward] = KStandardAction::forward( this, SLOT(goForward()), this );
+  updateActions();
 }
 
 QList<QAction*> ScateUrlHistory::actions()
 {
-  return _actions;
+  QList<QAction*> actions;
+  int i;
+  for(i=0; i<ActionCount; ++i) actions.append(_actions[i]);
+  return actions;
 }
 
 void ScateUrlHistory::goBack()
 {
   if( history.count() && curIndex > 0 ) {
     curIndex--;
+    updateActions();
     emit wentTo( history[curIndex] );
   }
 }
@@ -268,6 +268,7 @@ void ScateUrlHistory::goForward()
 {
   if( curIndex < history.count() - 1 ) {
     curIndex++;
+    updateActions();
     emit wentTo( history[curIndex] );
   }
 }
@@ -290,8 +291,14 @@ void ScateUrlHistory::goTo( const KUrl &url  )
   }
 
   curIndex = history.count() - 1;
-
+  updateActions();
   emit wentTo( history[curIndex] );
+}
+
+void ScateUrlHistory::updateActions()
+{
+  _actions[Back]->setEnabled( curIndex > 0 );
+  _actions[Forward]->setEnabled( curIndex < history.count() - 1 );
 }
 
 void ScateUrlHistory::print()

@@ -73,8 +73,16 @@ class ScateUrlHistory : public QObject
 {
   Q_OBJECT
   public:
+    enum Actions {
+      Back = 0,
+      Forward,
+      ActionCount
+    };
+
     ScateUrlHistory( QObject *parent = 0 );
     QList<QAction*> actions();
+    inline int index() {return curIndex;}
+    inline int count() {return history.count();}
   signals:
     void wentTo( const KUrl & );
   public slots:
@@ -82,11 +90,12 @@ class ScateUrlHistory : public QObject
     void goForward();
     void goTo( const KUrl & );
   private:
+    void updateActions();
     void print();
 
     QList<KUrl> history;
     int curIndex;
-    QList<QAction*> _actions;
+    QAction *_actions[ActionCount];
 };
 
 class ScateHelpWidget : public QWidget
