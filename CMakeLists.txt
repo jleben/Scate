@@ -19,8 +19,27 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules
+                      ${CMAKE_MODULE_PATH})
+
 find_package(KDE4 REQUIRED)
 include_directories( ${KDE4_INCLUDES} )
+
+find_package(KateSDK)
+
+if( NOT KATE_SDK_FOUND )
+
+  find_file( LIB_KATE_INTERFACES_4 libkateinterfaces.so.4 PATHS ${CMAKE_SYSTEM_LIBRARY_PATH} )
+  if( NOT LIB_KATE_INTERFACES_4 )
+    message( FATAL_ERROR "Missing: libkateinterfaces.so.4")
+  endif( NOT LIB_KATE_INTERFACES_4 )
+
+  message( STATUS "Missing Kate development files. Will build with project-provided." )
+
+  include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/kate/include/ )
+  link_directories( ${CMAKE_CURRENT_SOURCE_DIR}/kate/lib/ )
+
+endif( NOT KATE_SDK_FOUND )
 
 set(SCATE_SOURCES
   src/ScatePlugin.cpp
