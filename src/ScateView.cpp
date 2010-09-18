@@ -419,6 +419,7 @@ bool ScateHelpWidget::goToClass( const QString & className )
 
 void ScateHelpWidget::showEvent( QShowEvent *e )
 {
+  Q_UNUSED(e);
   if( virgin && browser->url().isEmpty() ) {
     virgin = false;
     QMetaObject::invokeMethod( this, "goHome", Qt::QueuedConnection );
