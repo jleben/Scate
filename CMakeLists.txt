@@ -19,13 +19,15 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules
-                      ${CMAKE_MODULE_PATH})
+set( CMAKE_MODULE_PATH
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules
+  ${CMAKE_MODULE_PATH}
+)
 
-find_package(KDE4 REQUIRED)
+find_package( KDE4 REQUIRED )
 include_directories( ${KDE4_INCLUDES} )
 
-find_package(KateSDK)
+find_package( KateSDK )
 
 if( NOT KATE_SDK_FOUND )
 
@@ -41,17 +43,17 @@ if( NOT KATE_SDK_FOUND )
 
 endif( NOT KATE_SDK_FOUND )
 
-set(SCATE_SOURCES
+set( SCATE_SOURCES
   src/ScatePlugin.cpp
   src/ScateView.cpp
   src/ScateConfigPage.cpp
 )
 
-kde4_add_plugin(katescateplugin ${SCATE_SOURCES})
-target_link_libraries(katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor khtml kparts )
+kde4_add_plugin( katescateplugin ${SCATE_SOURCES} )
+target_link_libraries( katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor khtml kparts )
 
 ########### install files ###############
-install(TARGETS katescateplugin  DESTINATION ${PLUGIN_INSTALL_DIR} )
+install( TARGETS katescateplugin  DESTINATION ${PLUGIN_INSTALL_DIR} )
 install( FILES share/ui.rc  DESTINATION  ${DATA_INSTALL_DIR}/kate/plugins/katescate )
 install( FILES share/supercollider.png  DESTINATION  ${DATA_INSTALL_DIR}/kate/plugins/katescate )
 install( FILES share/supercollider.xml DESTINATION ${DATA_INSTALL_DIR}/katepart/syntax )
