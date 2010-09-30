@@ -104,13 +104,20 @@ class ScateHelpWidget : public QWidget
   public:
     ScateHelpWidget( QWidget * parent = 0 );
     ScateUrlHistory *history() { return _history; }
+    QString selection() { return browser->selectedText(); }
   public slots:
     void goHome();
     bool goToClass( const QString & className );
     void openUrl( const KUrl &url );
+  signals:
+    void evaluationRequested( const QString & code );
+  private slots:
+    void copySelection();
+    void evaluateSelection();
   private:
     void showEvent( QShowEvent * );
     void warnSetHelpDir();
+    bool event( QEvent * );
     KHTMLPart *browser;
     ScateUrlHistory *_history;
     bool virgin;

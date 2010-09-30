@@ -35,6 +35,7 @@
 #include <QDirIterator>
 #include <QMessageBox>
 #include <QApplication>
+#include <QClipboard>
 
 ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
@@ -166,6 +167,9 @@ void ScateView::createHelpView()
   );
 
   helpWidget = new ScateHelpWidget( helpToolView );
+
+  connect( helpWidget, SIGNAL(evaluationRequested(const QString&)),
+           plugin, SLOT(eval(const QString&)) );
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -187,14 +191,24 @@ void ScateView::scSaid( const QString& str )
 
 void ScateView::evaluateSelection()
 {
-  KTextEditor::View *view = mainWindow()->activeView();
   QString text;
-  if( view->selection() )
-      text = view->selectionText();
-  else
-  {
-      text = view->document()->line( view->cursorPosition().line() );
+
+  /*
+  TODO: how can we check if any child has focus()? Would allow for much more
+  elegant solution of help-file text evaluation
+
+  if( helpWidget && helpWidget->focusWidget() ) {
+    text = helpWidget->selection();
   }
+  else {
+  */
+    KTextEditor::View *view = mainWindow()->activeView();
+    if( view->selection() )
+        text = view->selectionText();
+    else
+        text = view->document()->line( view->cursorPosition().line() );
+  //}
+
   if( !text.isEmpty() ) plugin->eval( text );
 }
 
@@ -417,6 +431,20 @@ bool ScateHelpWidget::goToClass( const QString & className )
   }
 }
 
+void ScateHelpWidget::copySelection()
+{
+  QString selection = browser->selectedText();
+  if( !selection.isEmpty() )
+    QApplication::clipboard()->setText( selection );
+}
+
+void ScateHelpWidget::evaluateSelection()
+{
+  QString selection = browser->selectedText();
+  if( !selection.isEmpty() )
+    emit evaluationRequested( selection );
+}
+
 void ScateHelpWidget::showEvent( QShowEvent *e )
 {
   Q_UNUSED(e);
@@ -447,6 +475,27 @@ ScateCmdLine::ScateCmdLine()
   l->addWidget(expr);
 
   expr->installEventFilter( this );
+}
+
+bool ScateHelpWidget::event( QEvent *e )
+{
+  if( e->type() == QEvent::ShortcutOverride ) {
+    QKeyEvent *ke = static_cast<QKeyEvent*>(e);
+    if( ke->matches( QKeySequence::Copy ) )
+    {
+      copySelection();
+      ke->accept();
+      return true;
+    }
+    if( ke->key() == Qt::Key_E  &&
+             (ke->modifiers() & Qt::ControlModifier) )
+    {
+      evaluateSelection();
+      ke->accept();
+      return true;
+    }
+  }
+  return QWidget::event( e );
 }
 
 bool ScateCmdLine::eventFilter( QObject *, QEvent *e )
