@@ -51,14 +51,17 @@ if( NOT KATE_SDK_FOUND )
 
 endif( NOT KATE_SDK_FOUND )
 
+set( QT_USE_QTWEBKIT TRUE )
+
 set( SCATE_SOURCES
   src/ScatePlugin.cpp
   src/ScateView.cpp
   src/ScateConfigPage.cpp
+  src/ScateHelpBrowser.cpp
 )
 
 kde4_add_plugin( katescateplugin ${SCATE_SOURCES} )
-target_link_libraries( katescateplugin  ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor khtml kparts )
+target_link_libraries( katescateplugin QtWebKit ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor kparts )
 
 if( NOT KATE_SDK_FOUND )
   add_dependencies( katescateplugin ln_kateinterfaces )

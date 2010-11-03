@@ -21,21 +21,17 @@
 
 #include "ScateView.hpp"
 #include "ScatePlugin.hpp"
+#include "ScateHelpBrowser.hpp"
 
 #include <kaction.h>
 #include <kactioncollection.h>
 #include <ktexteditor/view.h>
 #include <ktexteditor/document.h>
-#include <khtmlview.h>
+#include <klocalizedstring.h>
 
 #include <QVBoxLayout>
-#include <QToolBar>
 #include <QLabel>
-#include <QDir>
-#include <QDirIterator>
-#include <QMessageBox>
-#include <QApplication>
-#include <QClipboard>
+#include <QKeyEvent>
 
 ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
@@ -166,10 +162,7 @@ void ScateView::createHelpView()
     "SC Help"
   );
 
-  helpWidget = new ScateHelpWidget( helpToolView );
-
-  connect( helpWidget, SIGNAL(evaluationRequested(const QString&)),
-           plugin, SLOT(eval(const QString&)) );
+  helpWidget = new ScateHelpBrowser( helpToolView );
 }
 
 void ScateView::langStatusChanged( bool b_switch )
@@ -193,21 +186,16 @@ void ScateView::evaluateSelection()
 {
   QString text;
 
-  /*
-  TODO: how can we check if any child has focus()? Would allow for much more
-  elegant solution of help-file text evaluation
-
-  if( helpWidget && helpWidget->focusWidget() ) {
-    text = helpWidget->selection();
+  if( helpWidget && helpWidget->webViewFocused() ) {
+    text = helpWidget->selectedText();
   }
   else {
-  */
     KTextEditor::View *view = mainWindow()->activeView();
     if( view->selection() )
         text = view->selectionText();
     else
         text = view->document()->line( view->cursorPosition().line() );
-  //}
+  }
 
   if( !text.isEmpty() ) plugin->eval( text );
 }
@@ -228,7 +216,7 @@ void ScateView::helpForSelectedClass()
   if( view->selection() )
   {
       QString text = view->selectionText();
-      if( helpWidget->goToClass( text ) ) {
+      if( helpWidget->findHelpFor( text ) ) {
         mainWindow()->showToolView( helpToolView );
       }
   }
@@ -252,215 +240,6 @@ void ScateView::writeSessionConfig( KConfigBase* config, const QString& groupPre
   Q_UNUSED( groupPrefix );
 }
 
-ScateUrlHistory::ScateUrlHistory( QObject *parent ) :
-  QObject( parent ),
-  curIndex(-1)
-{
-  _actions[Back] = KStandardAction::back( this, SLOT(goBack()), this );
-  _actions[Forward] = KStandardAction::forward( this, SLOT(goForward()), this );
-  updateActions();
-}
-
-QList<QAction*> ScateUrlHistory::actions()
-{
-  QList<QAction*> actions;
-  int i;
-  for(i=0; i<ActionCount; ++i) actions.append(_actions[i]);
-  return actions;
-}
-
-void ScateUrlHistory::goBack()
-{
-  if( history.count() && curIndex > 0 ) {
-    curIndex--;
-    updateActions();
-    emit wentTo( history[curIndex] );
-  }
-}
-
-void ScateUrlHistory::goForward()
-{
-  if( curIndex < history.count() - 1 ) {
-    curIndex++;
-    updateActions();
-    emit wentTo( history[curIndex] );
-  }
-}
-
-void ScateUrlHistory::goTo( const KUrl &url  )
-{
-  int c = history.count();
-  if( c && history[curIndex] == url ) return;
-
-  c--;
-  while( c > curIndex ) {
-    history.removeLast();
-    c--;
-  }
-
-  history.append( url );
-
-  if( history.count() >= 25 ) {
-    history.removeFirst();
-  }
-
-  curIndex = history.count() - 1;
-  updateActions();
-  emit wentTo( history[curIndex] );
-}
-
-void ScateUrlHistory::updateActions()
-{
-  _actions[Back]->setEnabled( curIndex > 0 );
-  _actions[Forward]->setEnabled( curIndex < history.count() - 1 );
-}
-
-void ScateUrlHistory::print()
-{
-  printf("URLS are:\n");
-  Q_FOREACH( KUrl url, history ) {
-    printf("%s\n", url.url().toStdString().c_str());
-  }
-}
-
-
-ScateHelpWidget::ScateHelpWidget( QWidget * parent ) :
-  QWidget( parent ),
-  _history( new ScateUrlHistory( this ) ),
-  virgin( true )
-{
-  QVBoxLayout *box = new QVBoxLayout;
-  box->setContentsMargins(0,0,0,0);
-  box->setSpacing(0);
-  setLayout(box);
-
-  QToolBar *toolBar = new QToolBar;
-
-  QAction *a = KStandardAction::home( this, SLOT(goHome()), this );
-  toolBar->addAction(a);
-
-  QList<QAction*> historyActions = _history->actions();
-  foreach( QAction *a, historyActions ) {
-    toolBar->addAction( a );
-  }
-
-  box->addWidget( toolBar );
-
-  browser = new KHTMLPart((QWidget*)0, this);
-  browser->view()->setFrameStyle( QFrame::StyledPanel | QFrame::Sunken );
-  box->addWidget( browser->view() );
-
-  connect( browser->browserExtension(),
-            SIGNAL( openUrlRequest(const KUrl &,
-                                    const KParts::OpenUrlArguments &,
-                                    const KParts::BrowserArguments & ) ),
-            _history,
-            SLOT( goTo(const KUrl &) )
-          );
-  connect( _history, SIGNAL(wentTo(const KUrl &)),
-           this, SLOT(openUrl(const KUrl &)) );
-}
-
-void ScateHelpWidget::openUrl( const KUrl &url )
-{
-  browser->openUrl( url );
-}
-
-void ScateHelpWidget::goHome()
-{
-  KConfigGroup config(KGlobal::config(), "Scate");
-  QStringList helpDirs = config.readPathEntry( "HelpDirs", QStringList() );
-
-  if( !helpDirs.count() ) {
-    warnSetHelpDir();
-    return;
-  }
-
-  foreach( QString dirName, helpDirs ) {
-    QDir dir(dirName);
-    if( dir.exists("Help.html") ) {
-      KUrl helpUrl( dirName );
-      helpUrl.addPath( "Help.html" );
-      _history->goTo( helpUrl );
-      return;
-    }
-  }
-
-  QString msg("Could not find help homepage in any of given help directories.");
-  QMessageBox::warning( this, "SuperCollider Help", msg );
-}
-
-bool ScateHelpWidget::goToClass( const QString & className )
-{
-  KConfigGroup config(KGlobal::config(), "Scate");
-  QStringList helpDirNames = config.readPathEntry( "HelpDirs", QStringList() );
-
-  if( !helpDirNames.count() ) {
-    warnSetHelpDir();
-    return false;
-  }
-
-  QStringList filters;
-  filters << ( className + ".html" );
-
-  KUrl url;
-
-  foreach( QString helpDirName, helpDirNames ) {
-    qDebug() << tr("searching for help in: %1").arg(helpDirName);
-    QDir helpDir( helpDirName );
-    helpDir.setNameFilters( filters );
-
-    QDirIterator iter( helpDir, QDirIterator::Subdirectories );
-    if( iter.hasNext() ) {
-      QString result = iter.next();
-      qDebug() << tr("help search result: %1").arg( result );
-      url = KUrl( iter.filePath() );
-      break;
-    }
-    QApplication::processEvents();
-  }
-
-  if( url.isEmpty() ) {
-    QString msg = tr("No help file for class '%1' found.").arg( className );
-    QMessageBox::information( this, "SuperCollider Help", msg );
-    return false;
-  }
-  else {
-    _history->goTo( url );
-    return true;
-  }
-}
-
-void ScateHelpWidget::copySelection()
-{
-  QString selection = browser->selectedText();
-  if( !selection.isEmpty() )
-    QApplication::clipboard()->setText( selection );
-}
-
-void ScateHelpWidget::evaluateSelection()
-{
-  QString selection = browser->selectedText();
-  if( !selection.isEmpty() )
-    emit evaluationRequested( selection );
-}
-
-void ScateHelpWidget::showEvent( QShowEvent *e )
-{
-  Q_UNUSED(e);
-  if( virgin && browser->url().isEmpty() ) {
-    virgin = false;
-    QMetaObject::invokeMethod( this, "goHome", Qt::QueuedConnection );
-  }
-}
-
-void ScateHelpWidget::warnSetHelpDir()
-{
-  QString msg( "Please set at least one SuperCollider Help directory"
-               " on the Scate configuration panel." );
-  QMessageBox::warning( this, "SuperCollider Help", msg );
-}
-
 ScateCmdLine::ScateCmdLine()
   : curHistory( -1 )
 {
@@ -475,27 +254,6 @@ ScateCmdLine::ScateCmdLine()
   l->addWidget(expr);
 
   expr->installEventFilter( this );
-}
-
-bool ScateHelpWidget::event( QEvent *e )
-{
-  if( e->type() == QEvent::ShortcutOverride ) {
-    QKeyEvent *ke = static_cast<QKeyEvent*>(e);
-    if( ke->matches( QKeySequence::Copy ) )
-    {
-      copySelection();
-      ke->accept();
-      return true;
-    }
-    if( ke->key() == Qt::Key_E  &&
-             (ke->modifiers() & Qt::ControlModifier) )
-    {
-      evaluateSelection();
-      ke->accept();
-      return true;
-    }
-  }
-  return QWidget::event( e );
 }
 
 bool ScateCmdLine::eventFilter( QObject *, QEvent *e )

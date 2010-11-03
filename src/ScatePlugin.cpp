@@ -25,6 +25,9 @@
 
 #include <kaboutdata.h>
 #include <kstandarddirs.h>
+#include <kconfiggroup.h>
+
+#include <cstdio>
 
 SCProcess::SCProcess( QObject *parent ) : QProcess( parent )
 {
