@@ -49,64 +49,79 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
 
   KAction *a;
 
-  a = actionCollection()->addAction( "scate_switch_lang" );
+  a = actionCollection()->addAction( "scate_lang_switch" );
   a->setCheckable( true );
-  a->setText( i18n("Interpreter Running") );
+  a->setIcon( KIcon("system-shutdown") );
+  a->setText( i18n("Boot") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( switchLang(bool) ) );
   connect( plugin, SIGNAL( langSwitched(bool) ), this, SLOT( langStatusChanged(bool) ) );
   aLangSwitch = a;
 
-  a = actionCollection()->addAction( "scate_restart_lang" );
-  a->setText( i18n("Restart Interpreter") );
+  a = actionCollection()->addAction( "scate_lang_restart" );
+  a->setIcon( KIcon("system-reboot") );
+  a->setText( i18n("Reboot") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( restartLang() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_start_server" );
-  a->setText( i18n("Start Synth Server") );
+  a = actionCollection()->addAction( "scate_synth_start" );
+  a->setText( i18n("Boot Synth") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( startServer() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_stop_server" );
-  a->setText( i18n("Stop Synth Server") );
+  a = actionCollection()->addAction( "scate_synth_stop" );
+  a->setText( i18n("Shutdown Synth") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopServer() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_start_swingosc" );
-  a->setText( i18n("Start SwingOSC GUI Server") );
+  a = actionCollection()->addAction( "scate_gui_qt", plugin, SLOT(switchToQt()) );
+  a->setText( i18n("Qt") );
+  langDepActions.append(a);
+
+  a = actionCollection()->addAction( "scate_gui_swing", plugin, SLOT(switchToSwing()) );
+  a->setText( i18n("SwingOSC") );
+  langDepActions.append(a);
+
+  a = actionCollection()->addAction( "scate_swing_start" );
+  a->setText( i18n("Boot SwingOSC Server") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( startSwingOSC() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_stop_swingosc" );
-  a->setText( i18n("Stop SwingOSC GUI Server") );
+  a = actionCollection()->addAction( "scate_swing_stop" );
+  a->setText( i18n("Shutdown SwingOSC Server") );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopSwingOSC() ) );
   langDepActions.append(a);
 
   a = actionCollection()->addAction( "scate_evaluate" );
-  a->setText( i18n("Evaluate") );
+  a->setIcon( KIcon("media-playback-start") );
+  a->setText( i18n("Execute") );
   a->setShortcut( Qt::CTRL | Qt::Key_E );
   connect( a, SIGNAL( triggered(bool) ), this, SLOT( evaluateSelection() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_browse_class" );
-  a->setText( i18n("Show in Class Browser") );
-  a->setShortcut( Qt::CTRL | Qt::Key_B );
-  connect( a, SIGNAL( triggered(bool) ), this, SLOT( browseSelectedClass() ) );
-  langDepActions.append(a);
-
-  a = actionCollection()->addAction( "scate_class_help" );
-  a->setText( i18n("Find Help for Class") );
-  a->setShortcut( Qt::CTRL | Qt::Key_H );
-  connect( a, SIGNAL( triggered(bool) ), this, SLOT( helpForSelectedClass() ) );
-
   a = actionCollection()->addAction( "scate_stop_proc" );
-  a->setText( i18n("Stop All Processing") );
+  a->setIcon( KIcon("media-playback-stop") );
+  a->setText( i18n("Stop") );
   a->setShortcut( Qt::Key_Escape );
   connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopProcessing() ) );
   langDepActions.append(a);
 
   a = actionCollection()->addAction( "scate_clear" );
+  a->setIcon( KIcon("window-close") );
   a->setText( i18n("Clear Output") );
   connect( a, SIGNAL( triggered(bool) ), scOutView, SLOT( clear() ) );
+
+  a = actionCollection()->addAction( "scate_browse_class" );
+  a->setIcon( KIcon("help-browser") );
+  a->setText( i18n("Class Reference for Selection") );
+  a->setShortcut( Qt::CTRL | Qt::Key_B );
+  connect( a, SIGNAL( triggered(bool) ), this, SLOT( browseSelectedClass() ) );
+  langDepActions.append(a);
+
+  a = actionCollection()->addAction( "scate_help" );
+  a->setIcon( KIcon("system-help") );
+  a->setText( i18n("Help for Selection") );
+  a->setShortcut( Qt::CTRL | Qt::Key_H );
+  connect( a, SIGNAL( triggered(bool) ), this, SLOT( helpForSelectedClass() ) );
 
   mainWindow()->guiFactory()->addClient( this );
 
@@ -168,6 +183,11 @@ void ScateView::createHelpView()
 void ScateView::langStatusChanged( bool b_switch )
 {
   aLangSwitch->setChecked( b_switch );
+  if( b_switch )
+    aLangSwitch->setText( i18n("Shutdown") );
+  else
+    aLangSwitch->setText( i18n("Boot") );
+
   foreach ( QAction *a, langDepActions ) {
     a->setEnabled( b_switch );
   }

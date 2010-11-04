@@ -208,6 +208,14 @@ void ScatePlugin::stopProcessing()
   sysMsg( "All processing stopped." );
 }
 
+void ScatePlugin::switchToQt() {
+  eval( "GUI.qt" );
+}
+
+void ScatePlugin::switchToSwing() {
+  eval( "GUI.swing" );
+}
+
 void ScatePlugin::eval( const QString& cmd, bool silent )
 {
   if( !langRunning() ) {

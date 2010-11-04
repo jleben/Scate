@@ -67,6 +67,8 @@ class  ScatePlugin :
     void stopSwingOSC();
     void eval( const QString&, bool silent = false );
     void stopProcessing();
+    void switchToQt();
+    void switchToSwing();
   private slots:
     void scStarted();
     void scFinished( int, QProcess::ExitStatus );

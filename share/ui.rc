@@ -1,22 +1,47 @@
 <!DOCTYPE kpartgui>
 <gui name="Scate" library="libkatescate" version="2">
+
 <MenuBar>
- <Menu name="supercollider"><text>S&amp;uperCollider</text>
-    <Action name="scate_switch_lang" />
-    <Action name="scate_restart_lang" />
-    <separator/>
-    <Action name="scate_start_server"/>
-    <Action name="scate_stop_server"/>
-    <separator/>
-    <Action name="scate_start_swingosc" />
-    <Action name="scate_stop_swingosc" />
+ <Menu name="scate_menu"><text>S&amp;uperCollider</text>
+    <Menu name="scate_lang_menu">
+      <text>Language</text>
+      <Action name="scate_lang_switch" />
+      <Action name="scate_lang_restart" />
+    </Menu>
+    <Menu name="scate_synth_menu">
+      <text>Synth</text>
+      <Action name="scate_synth_start"/>
+      <Action name="scate_synth_stop"/>
+    </Menu>
+    <Menu name="scate_gui_menu">
+      <text>GUI</text>
+      <Action name="scate_gui_qt"/>
+      <Action name="scate_gui_swing"/>
+      <separator/>
+      <Action name="scate_swing_start" />
+      <Action name="scate_swing_stop" />
+    </Menu>
     <separator/>
     <Action name="scate_evaluate" />
-    <Action name="scate_browse_class" />
-    <Action name="scate_class_help" />
     <Action name="scate_stop_proc" />
     <separator/>
     <Action name="scate_clear" />
+    <separator/>
+    <Action name="scate_browse_class" />
+    <Action name="scate_help" />
  </Menu>
 </MenuBar>
+
+<ToolBar name="scate_toolbar">
+  <text>SuperCollider Toolbar</text>
+  <Action name="scate_lang_switch"/>
+  <Action name="scate_lang_restart"/>
+  <separator/>
+  <Action name="scate_synth_start"/>
+  <Action name="scate_synth_stop"/>
+  <separator/>
+  <Action name="scate_evaluate"/>
+  <Action name="scate_stop_proc"/>
+</ToolBar>
+
 </gui>
