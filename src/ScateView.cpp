@@ -33,6 +33,8 @@
 #include <QLabel>
 #include <QKeyEvent>
 
+using namespace Scate;
+
 ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
     plugin( plugin_ ),
@@ -159,7 +161,7 @@ void ScateView::createOutputView()
            this, SLOT( scSaid( const QString& ) ) );
   l->addWidget( scOutView );
 
-  cmdLine = new ScateCmdLine;
+  cmdLine = new CmdLine( 0, 30 );
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
            plugin, SLOT( eval( const QString&, bool ) ) );
 
@@ -258,66 +260,4 @@ void ScateView::writeSessionConfig( KConfigBase* config, const QString& groupPre
   // see the Kate::Plugin docs for more information.
   Q_UNUSED( config );
   Q_UNUSED( groupPrefix );
-}
-
-ScateCmdLine::ScateCmdLine()
-  : curHistory( -1 )
-{
-  QHBoxLayout *l = new QHBoxLayout;
-  l->setContentsMargins(5,0,0,0);
-  setLayout( l );
-
-  QLabel *lbl = new QLabel("Execute:");
-  expr = new QLineEdit;
-
-  l->addWidget(lbl);
-  l->addWidget(expr);
-
-  expr->installEventFilter( this );
-}
-
-bool ScateCmdLine::eventFilter( QObject *, QEvent *e )
-{
-  int type = e->type();
-  if( type != QEvent::KeyPress ) return false;
-
-  QKeyEvent *ke = static_cast<QKeyEvent*>(e);
-
-  switch( ke->key() )
-  {
-    case Qt::Key_Return:
-    case Qt::Key_Enter:
-
-      if( expr->text().isEmpty() ) return true;
-
-      emit invoked( expr->text(), false );
-      if( history.count() == 0 || history[0] != expr->text() )
-      {
-        if( history.count() > 30 ) history.removeAt( history.count() - 1 );
-        history.prepend( expr->text() );
-      }
-      curHistory = -1;
-      expr->clear();
-      return true;
-
-    case Qt::Key_Up:
-      if( curHistory < history.count() - 1 ) {
-          expr->blockSignals(true);
-          expr->setText( history[++curHistory] );
-          expr->blockSignals(false);
-      }
-      return true;
-
-    case Qt::Key_Down:
-      if( curHistory > -1 ) {
-          --curHistory;
-          expr->blockSignals(true);
-          if( curHistory == -1 ) expr->clear();
-          else expr->setText( history[curHistory] );
-          expr->blockSignals(false);
-      }
-      return true;
-
-    default: return false;
-  }
 }

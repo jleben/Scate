@@ -54,6 +54,7 @@ endif( NOT KATE_SDK_FOUND )
 set( QT_USE_QTWEBKIT TRUE )
 
 set( SCATE_SOURCES
+  src/cmdline.cpp
   src/ScatePlugin.cpp
   src/ScateView.cpp
   src/ScateConfigPage.cpp

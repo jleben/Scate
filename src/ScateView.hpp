@@ -22,6 +22,8 @@
 #ifndef SCATE_VIEW_H
 #define SCATE_VIEW_H
 
+#include "cmdline.hpp"
+
 #include <kxmlguiclient.h>
 #include <kate/plugin.h>
 #include <kate/mainwindow.h>
@@ -59,29 +61,13 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
 
     QWidget *outputToolView;
     QTextEdit *scOutView;
-    ScateCmdLine *cmdLine;
+    Scate::CmdLine *cmdLine;
 
     QWidget *helpToolView;
     ScateHelpBrowser *helpWidget;
 
     QAction *aLangSwitch;
     QList<QAction*> langDepActions;
-};
-
-class ScateCmdLine : public QWidget
-{
-  Q_OBJECT
-
-  public:
-    ScateCmdLine();
-  signals:
-    void invoked( const QString&, bool );
-  private:
-    bool eventFilter( QObject *, QEvent * );
-
-    QLineEdit *expr;
-    QStringList history;
-    int curHistory;
 };
 
 #endif //SCATE_VIEW_H
