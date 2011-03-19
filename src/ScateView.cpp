@@ -39,6 +39,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
     plugin( plugin_ ),
     outputToolView(0),
+    maxOutBlocks(500),
     helpToolView(0),
     helpWidget(0)
 {
@@ -157,6 +158,7 @@ void ScateView::createOutputView()
 
   scOutView = new QTextEdit;
   scOutView->setReadOnly( true );
+  scOutView->document()->setMaximumBlockCount( maxOutBlocks );
   connect( plugin, SIGNAL( scSaid( const QString& ) ),
            this, SLOT( scSaid( const QString& ) ) );
   l->addWidget( scOutView );

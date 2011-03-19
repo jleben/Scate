@@ -61,6 +61,7 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
 
     QWidget *outputToolView;
     QTextEdit *scOutView;
+    int maxOutBlocks;
     Scate::CmdLine *cmdLine;
 
     QWidget *helpToolView;
