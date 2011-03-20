@@ -17,6 +17,10 @@ These are the configuration options:
 - Help File Directories:
     One or more directories where Scate will search for SuperCollider help
     files.
+    Scate's help search can make use of the new SCDoc Documentation System's
+    search engine, if it is found in one of the help directories. If not,
+    Scate will look for help files with the same base name as the search term,
+    so you can use the old help files as well.
 
 - SwingOSC Java Program:
     The full path to SwingOSC java program.
@@ -40,10 +44,10 @@ server, and more.
 
 Scate will add two tabs to Kate's bottom tool area:
 
-- SC Output: opens the window where the interpreter's output will be printed and
-  code can be executed.
+- SC Terminal: opens the window where the interpreter's output will be printed
+  and code can be executed.
 
-- SC Help: opens the window where you can browse SC help files.
+- SC Help: opens the window where you can browse and search for SC help files.
 
 You can move these tabs to another tool area via the menu that pops up when
 you right-click on them.
