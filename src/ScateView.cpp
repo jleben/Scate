@@ -241,9 +241,8 @@ void ScateView::helpForSelectedClass()
   if( view->selection() )
   {
       QString text = view->selectionText();
-      if( helpWidget->findHelpFor( text ) ) {
-        mainWindow()->showToolView( helpToolView );
-      }
+      helpWidget->searchHelp( text );
+      mainWindow()->showToolView( helpToolView );
   }
 }
 

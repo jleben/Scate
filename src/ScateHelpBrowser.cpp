@@ -71,7 +71,7 @@ ScateHelpBrowser::ScateHelpBrowser( QWidget *parent )
   Q_UNUSED(findShortcut);
 
   connect( searchBar, SIGNAL(searchedFor(const QString&)),
-           this, SLOT(findHelpFor(const QString&)) );
+           this, SLOT(searchHelp(const QString&)) );
   connect( copyShortcut, SIGNAL(activated()),
            webView->pageAction( QWebPage::Copy ), SLOT(trigger()) );
 }
@@ -161,6 +161,37 @@ bool ScateHelpBrowser::findHelpFor( const QString & className )
     webView->load( url );
     return true;
   }
+}
+
+void ScateHelpBrowser::searchHelp( const QString & searchTerm )
+{
+  KConfigGroup config(KGlobal::config(), "Scate");
+  QStringList helpDirNames = config.readPathEntry( "HelpDirs", QStringList() );
+
+  if( !helpDirNames.count() ) {
+    warnSetHelpDir();
+    return;
+  }
+
+  QString searchFileName;
+
+  foreach( QString helpDirName, helpDirNames ) {
+    QDir dir( helpDirName );
+    QString fileName = dir.filePath("Search.html");
+    if( !QFile::exists( fileName ) ) continue;
+    searchFileName = fileName;
+    break;
+  }
+
+  if( searchFileName.isEmpty() ) {
+    QString msg( "Could not find the SCDoc search page in the given help directories." );
+    QMessageBox::warning( this, "SuperCollider Help Search", msg );
+    return;
+  }
+
+  QUrl url( QUrl::fromLocalFile(searchFileName) );
+  url.setFragment(searchTerm);
+  webView->load(url);
 }
 
 void ScateHelpBrowser::warnSetHelpDir()
