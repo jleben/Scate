@@ -153,7 +153,7 @@ bool ScateHelpBrowser::findHelpFor( const QString & className )
   }
 
   if( url.isEmpty() ) {
-    QString msg = tr("No help file for class '%1' found.").arg( className );
+    QString msg = tr("No help file for '%1' found.").arg( className );
     QMessageBox::information( this, "SuperCollider Help", msg );
     return false;
   }
@@ -184,8 +184,12 @@ void ScateHelpBrowser::searchHelp( const QString & searchTerm )
   }
 
   if( searchFileName.isEmpty() ) {
+#if 0
+    // FIXME: re-enable when SCDoc is merged into main SC
     QString msg( "Could not find the SCDoc search page in the given help directories." );
     QMessageBox::warning( this, "SuperCollider Help Search", msg );
+#endif
+    findHelpFor( searchTerm );
     return;
   }
 

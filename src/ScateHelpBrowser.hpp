@@ -40,8 +40,8 @@ class ScateHelpBrowser : public QWidget
   public slots:
     void goHome();
     void newTextSearch();
-    // NOTE: findHelpFor( class ) is not used at the moment. SCDoc search page
-    // is used instead by searchHelp( search-term ).
+    // NOTE: findHelpFor( class ) is used as a fallback in case SCDoc's
+    // search page (Search.html) is not found in help dirs
     bool findHelpFor( const QString & className );
     void searchHelp( const QString & searchTerm );
     void findText( const QString&, QWebPage::FindFlags );
