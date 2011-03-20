@@ -42,10 +42,14 @@
         <DetectChar char="$" attribute="String" context="char"  />
         <DetectChar char="&quot;" attribute="String" context="string"  />
         <DetectChar char="&apos;" attribute="String" context="symbol"  />
+        <DetectChar char="@" attribute="Normal" context="point"/>
         <Detect2Chars char="/" char1="/" attribute="Comment" context="oneLineComment"/>
         <Detect2Chars char="/" char1="*" attribute="Comment" context="multiLineComment" beginRegion="Comment"/>
-        <Int attribute="Int" context="#stay"/>
+        <RegExpr String="[0-9]+r[A-Za-z0-9]*" attribute="Float" context="#stay"/>
+        <RegExpr String="[0-9]*\.[0-9]*pi" attribute="Float" context="#stay"/>
+        <RegExpr String="[0-9]+pi" attribute="Float" context="#stay"/>
         <Float attribute="Float" context="#stay"/>
+        <Int attribute="Int" context="#stay"/>
         <RegExpr String="_[A-Za-z0-9_]*" attribute="Primitive" context="#stay"/>
         <RegExpr String="[a-z][A-Za-z0-9_]*" attribute="Normal" context="#stay"/>
         <RegExpr String="[A-Z][A-Za-z0-9_]*" attribute="Class" context="#stay"/>
@@ -59,7 +63,6 @@
         <RegExpr String="\\." attribute="Char" context="#stay"/>
       </context>
       <context name="symbolAlias" attribute="String" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
-        <!--<DetectChar char=" " attribute="NormalText" context="#pop"/>-->
         <DetectIdentifier attribute="String" context="#stay"/>
       </context>
       <context name="char" attribute="String" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
@@ -73,6 +76,14 @@
       <context name="multiLineComment" attribute="Comment" lineEndContext="#stay">
         <keyword String="alerts" attribute="Alerts" context="#stay"/>
         <Detect2Chars char="*" char1="/" attribute="Comment" context="#pop" endRegion="Comment"/>
+      </context>
+      <context name="point" attribute="Normal" lineEndContext="#pop" fallthrough="true" fallthroughContext="#pop">
+        <RegExpr String="[0-9]+r[A-Za-z0-9]*" attribute="Float" context="#pop"/>
+        <RegExpr String="[0-9]*\.[0-9]*pi" attribute="Float" context="#pop"/>
+        <RegExpr String="[0-9]+pi" attribute="Float" context="#pop"/>
+        <!-- Following: match float and int, special Float and Int rules don't work here! -->
+        <RegExpr String="[0-9]*\.[0-9]*" attribute="Float" context="#pop"/>
+        <RegExpr String="[0-9]+" attribute="Int" context="#pop"/>
       </context>
     </contexts>
 
@@ -96,7 +107,7 @@
       <comment name="singleLine" start="//" />
       <comment name="multiLine" start="/*" end="*/" />
     </comments>
-    <keywords casesensitive="1"/>
+    <keywords casesensitive="1" additionalDeliminator="@"/>
   </general>
 
 </language>
