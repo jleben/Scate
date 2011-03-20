@@ -144,10 +144,10 @@ void ScateView::createOutputView()
   if( outputToolView ) return;
 
   outputToolView = mainWindow()->createToolView(
-    "SC Output",
-    Kate::MainWindow::Bottom,
+    "SC Terminal",
+    Kate::MainWindow::Right,
     QPixmap( plugin->iconPath() ),
-    "SC Output"
+    "SC Terminal"
   );
 
   QWidget *w = new QWidget (outputToolView);
@@ -163,10 +163,9 @@ void ScateView::createOutputView()
            this, SLOT( scSaid( const QString& ) ) );
   l->addWidget( scOutView );
 
-  cmdLine = new CmdLine( 0, 30 );
+  cmdLine = new CmdLine( "Code:", 30 );
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
            plugin, SLOT( eval( const QString&, bool ) ) );
-
   l->addWidget( cmdLine );
 }
 
@@ -176,7 +175,7 @@ void ScateView::createHelpView()
 
   helpToolView = mainWindow()->createToolView (
     "SC Help",
-    Kate::MainWindow::Bottom,
+    Kate::MainWindow::Right,
     QPixmap( plugin->iconPath() ),
     "SC Help"
   );
@@ -199,8 +198,6 @@ void ScateView::langStatusChanged( bool b_switch )
 
 void ScateView::scSaid( const QString& str )
 {
-  /*QCursor cursor( scOutView->document()->end() );
-  cursor->insertText( str );*/
   scOutView->moveCursor( QTextCursor::End );
   scOutView->insertPlainText( str );
   scOutView->ensureCursorVisible();
