@@ -54,8 +54,8 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     void langStatusChanged( bool );
     void scSaid( const QString& );
   private:
-    void createOutputView();
-    void createHelpView();
+    QWidget * createOutputView();
+    QWidget * createHelpView();
 
     ScatePlugin *plugin;
 

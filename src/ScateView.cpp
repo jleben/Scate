@@ -47,8 +47,8 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
   //TODO lazy creation
-  createOutputView();
-  createHelpView();
+  outputToolView = createOutputView();
+  helpToolView = createHelpView();
 
   KAction *a;
 
@@ -139,48 +139,49 @@ ScateView::~ScateView()
   delete helpToolView;
 }
 
-void ScateView::createOutputView()
+QWidget * ScateView::createOutputView()
 {
-  if( outputToolView ) return;
-
-  outputToolView = mainWindow()->createToolView(
+  QWidget *toolView = mainWindow()->createToolView(
     "SC Terminal",
     Kate::MainWindow::Right,
     QPixmap( plugin->iconPath() ),
     "SC Terminal"
   );
 
-  QWidget *w = new QWidget (outputToolView);
-  QLayout *l = new QVBoxLayout;
-  l->setContentsMargins(0,0,0,0);
-  l->setSpacing(0);
-  w->setLayout(l);
-
   scOutView = new QTextEdit;
   scOutView->setReadOnly( true );
   scOutView->document()->setMaximumBlockCount( maxOutBlocks );
   connect( plugin, SIGNAL( scSaid( const QString& ) ),
            this, SLOT( scSaid( const QString& ) ) );
-  l->addWidget( scOutView );
 
   cmdLine = new CmdLine( "Code:", 30 );
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
            plugin, SLOT( eval( const QString&, bool ) ) );
+
+  QLayout *l = new QVBoxLayout;
+  l->setContentsMargins(0,0,0,0);
+  l->setSpacing(0);
+  l->addWidget( scOutView );
   l->addWidget( cmdLine );
+
+  QWidget *w = new QWidget (toolView);
+  w->setLayout(l);
+
+  return toolView;
 }
 
-void ScateView::createHelpView()
+QWidget * ScateView::createHelpView()
 {
-  if( helpToolView ) return;
-
-  helpToolView = mainWindow()->createToolView (
+  QWidget *toolView = mainWindow()->createToolView (
     "SC Help",
     Kate::MainWindow::Right,
     QPixmap( plugin->iconPath() ),
     "SC Help"
   );
 
-  helpWidget = new ScateHelpBrowser( helpToolView );
+  helpWidget = new ScateHelpBrowser( toolView );
+
+  return toolView;
 }
 
 void ScateView::langStatusChanged( bool b_switch )
