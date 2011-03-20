@@ -69,6 +69,8 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
 
     QAction *aLangSwitch;
     QList<QAction*> langDepActions;
+
+    QAction *aClearOutput;
 };
 
 #endif //SCATE_VIEW_H

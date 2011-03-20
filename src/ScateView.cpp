@@ -32,6 +32,7 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QKeyEvent>
+#include <QToolBar>
 
 using namespace Scate;
 
@@ -46,87 +47,83 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   setComponentData( ScatePluginFactory::componentData() );
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
-  //TODO lazy creation
-  outputToolView = createOutputView();
-  helpToolView = createHelpView();
-
   KAction *a;
+  KAction *aLangRestart, *aSynthStart, *aSynthStop, *aGuiQt, *aGuiSwing,
+  *aSwingStart, *aSwingStop, *aEval, *aStopProc, *aHelp;
 
-  a = actionCollection()->addAction( "scate_lang_switch" );
+  aLangSwitch = a = actionCollection()->addAction( "scate_lang_switch" );
   a->setCheckable( true );
   a->setIcon( KIcon("system-shutdown") );
   a->setText( i18n("Boot") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( switchLang(bool) ) );
-  connect( plugin, SIGNAL( langSwitched(bool) ), this, SLOT( langStatusChanged(bool) ) );
-  aLangSwitch = a;
 
-  a = actionCollection()->addAction( "scate_lang_restart" );
+  aLangRestart = a = actionCollection()->addAction( "scate_lang_restart" );
   a->setIcon( KIcon("system-reboot") );
   a->setText( i18n("Reboot") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( restartLang() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_synth_start" );
+  aSynthStart = a = actionCollection()->addAction( "scate_synth_start" );
   a->setText( i18n("Boot Synth") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( startServer() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_synth_stop" );
+  aSynthStop = a = actionCollection()->addAction( "scate_synth_stop" );
   a->setText( i18n("Shutdown Synth") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopServer() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_gui_qt", plugin, SLOT(switchToQt()) );
+  aGuiQt = a = actionCollection()->addAction( "scate_gui_qt", plugin, SLOT(switchToQt()) );
   a->setText( i18n("Qt") );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_gui_swing", plugin, SLOT(switchToSwing()) );
+  aGuiSwing = a = actionCollection()->addAction( "scate_gui_swing", plugin, SLOT(switchToSwing()) );
   a->setText( i18n("SwingOSC") );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_swing_start" );
+  aSwingStart = a = actionCollection()->addAction( "scate_swing_start" );
   a->setText( i18n("Boot SwingOSC Server") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( startSwingOSC() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_swing_stop" );
+  aSwingStop = a = actionCollection()->addAction( "scate_swing_stop" );
   a->setText( i18n("Shutdown SwingOSC Server") );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopSwingOSC() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_evaluate" );
+  aEval = a = actionCollection()->addAction( "scate_evaluate" );
   a->setIcon( KIcon("media-playback-start") );
   a->setText( i18n("Execute") );
   a->setShortcut( Qt::CTRL | Qt::Key_E );
-  connect( a, SIGNAL( triggered(bool) ), this, SLOT( evaluateSelection() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_stop_proc" );
+  aStopProc = a = actionCollection()->addAction( "scate_stop_proc" );
   a->setIcon( KIcon("media-playback-stop") );
   a->setText( i18n("Stop") );
   a->setShortcut( Qt::Key_Escape );
-  connect( a, SIGNAL( triggered(bool) ), plugin, SLOT( stopProcessing() ) );
   langDepActions.append(a);
 
-  a = actionCollection()->addAction( "scate_clear" );
+  aClearOutput = a = actionCollection()->addAction( "scate_clear" );
   a->setIcon( KIcon("window-close") );
   a->setText( i18n("Clear Output") );
-  connect( a, SIGNAL( triggered(bool) ), scOutView, SLOT( clear() ) );
 
-  a = actionCollection()->addAction( "scate_browse_class" );
-  a->setIcon( KIcon("help-browser") );
-  a->setText( i18n("Class Reference for Selection") );
-  a->setShortcut( Qt::CTRL | Qt::Key_B );
-  connect( a, SIGNAL( triggered(bool) ), this, SLOT( browseSelectedClass() ) );
-  langDepActions.append(a);
-
-  a = actionCollection()->addAction( "scate_help" );
+  aHelp = a = actionCollection()->addAction( "scate_help" );
   a->setIcon( KIcon("system-help") );
   a->setText( i18n("Help for Selection") );
   a->setShortcut( Qt::CTRL | Qt::Key_H );
-  connect( a, SIGNAL( triggered(bool) ), this, SLOT( helpForSelectedClass() ) );
 
   mainWindow()->guiFactory()->addClient( this );
+
+  //TODO lazy creation (on-demand)
+  outputToolView = createOutputView();
+  helpToolView = createHelpView();
+
+  connect( aLangSwitch, SIGNAL( triggered(bool) ), plugin, SLOT( switchLang(bool) ) );
+  connect( aLangRestart, SIGNAL( triggered(bool) ), plugin, SLOT( restartLang() ) );
+  connect( aSynthStart, SIGNAL( triggered(bool) ), plugin, SLOT( startServer() ) );
+  connect( aSynthStop, SIGNAL( triggered(bool) ), plugin, SLOT( stopServer() ) );
+  connect( aSwingStart, SIGNAL( triggered(bool) ), plugin, SLOT( startSwingOSC() ) );
+  connect( aSwingStop, SIGNAL( triggered(bool) ), plugin, SLOT( stopSwingOSC() ) );
+  connect( aEval, SIGNAL( triggered(bool) ), this, SLOT( evaluateSelection() ) );
+  connect( aStopProc, SIGNAL( triggered(bool) ), plugin, SLOT( stopProcessing() ) );
+  connect( aClearOutput, SIGNAL( triggered(bool) ), scOutView, SLOT( clear() ) );
+  connect( aHelp, SIGNAL( triggered(bool) ), this, SLOT( helpForSelectedClass() ) );
+
+  connect( plugin, SIGNAL( langSwitched(bool) ), this, SLOT( langStatusChanged(bool) ) );
 
   //check and enable actions according to interpreter status
   langStatusChanged( plugin->langRunning() );
@@ -158,9 +155,15 @@ QWidget * ScateView::createOutputView()
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
            plugin, SLOT( eval( const QString&, bool ) ) );
 
+  QToolBar *toolbar = new QToolBar();
+  toolbar->setIconSize(QSize(16,16));
+  toolbar->setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
+  toolbar->addAction( aClearOutput );
+
   QLayout *l = new QVBoxLayout;
   l->setContentsMargins(0,0,0,0);
   l->setSpacing(0);
+  l->addWidget( toolbar );
   l->addWidget( scOutView );
   l->addWidget( cmdLine );
 
