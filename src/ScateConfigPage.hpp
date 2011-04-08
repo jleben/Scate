@@ -27,12 +27,17 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QListWidget>
+#include <QFontComboBox>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
 
 class ScatePlugin;
 class ScateDirListWidget;
 
 class ScateConfigPage : public Kate::PluginConfigPage
 {
+  Q_OBJECT
+
   public:
     ScateConfigPage( ScatePlugin *, QWidget * );
     void apply();
@@ -41,9 +46,16 @@ class ScateConfigPage : public Kate::PluginConfigPage
   private:
     QLineEdit *sclangExeEdit;
     QLineEdit *dataDirEdit;
-    ScateDirListWidget *helpDirList;
-    QLineEdit *swingOscDirEdit;
     QCheckBox *startLangCheck;
+    QLineEdit *swingOscDirEdit;
+
+    QSpinBox *trmMaxRowSpin;
+    QFontComboBox *trmFontCombo;
+    QSpinBox *trmFontSizeSpin;
+
+    ScateDirListWidget *helpDirList;
+    QDoubleSpinBox *helpFontScaleSpin;
+    ScatePlugin *plugin;
 };
 
 class ScateDirListWidget : public QWidget

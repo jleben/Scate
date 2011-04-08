@@ -20,6 +20,7 @@
 */
 
 #include "ScateHelpBrowser.hpp"
+#include "ScatePlugin.hpp"
 
 #include <kaction.h>
 #include <kactioncollection.h>
@@ -39,10 +40,13 @@
 #include <QKeyEvent>
 
 
-ScateHelpBrowser::ScateHelpBrowser( QWidget *parent )
+ScateHelpBrowser::ScateHelpBrowser( ScatePlugin *plugin, QWidget *parent )
 : QWidget( parent ), findBar(0), virgin( true )
 {
+  KConfigGroup config(KGlobal::config(), "Scate");
+
   webView = new QWebView();
+  webView->setTextSizeMultiplier( config.readEntry( "HelpFontScale", 1.0 ) );
 
   ScateHelpSearchBar *searchBar = new ScateHelpSearchBar();
 
@@ -74,6 +78,13 @@ ScateHelpBrowser::ScateHelpBrowser( QWidget *parent )
            this, SLOT(searchHelp(const QString&)) );
   connect( copyShortcut, SIGNAL(activated()),
            webView->pageAction( QWebPage::Copy ), SLOT(trigger()) );
+  connect( plugin, SIGNAL(configChanged()), this, SLOT(applyConfig()) );
+}
+
+void ScateHelpBrowser::applyConfig()
+{
+  KConfigGroup config(KGlobal::config(), "Scate");
+  webView->setTextSizeMultiplier( config.readEntry( "HelpFontScale", 1.0 ) );
 }
 
 void ScateHelpBrowser::findText( const QString& str, QWebPage::FindFlags flags )

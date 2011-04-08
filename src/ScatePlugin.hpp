@@ -48,14 +48,19 @@ class  ScatePlugin :
     QString configPageName (uint number) const;
     Kate::PluginConfigPage * configPage (uint number, QWidget *parent, const char *name);
 
+    void applyConfig();
+
     bool langRunning();
     bool serverRunning();
     inline QString iconPath() { return _iconPath; }
+
   signals:
     void scSaid( const QString& );
     void langSwitched( bool );
     void serverSwitched( bool );
     void swingOscSwitched( bool );
+    void configChanged();
+
   public slots:
     void switchLang( bool );
     void switchServer( bool );

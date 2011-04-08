@@ -90,6 +90,11 @@ Kate::PluginConfigPage * ScatePlugin::configPage (uint number=0, QWidget *parent
   return new ScateConfigPage( this, parent );
 }
 
+void ScatePlugin::applyConfig()
+{
+  Q_EMIT( configChanged() );
+}
+
 void ScatePlugin::startLang()
 {
   QProcess::ProcessState state = scProcess->state();

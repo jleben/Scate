@@ -29,15 +29,17 @@
 
 class QWebView;
 class ScateFindBar;
+class ScatePlugin;
 
 class ScateHelpBrowser : public QWidget
 {
   Q_OBJECT
   public:
-    ScateHelpBrowser( QWidget *parent = 0 );
+    ScateHelpBrowser( ScatePlugin *, QWidget *parent = 0 );
     inline bool webViewFocused() { return webView->hasFocus(); }
     inline QString selectedText() { return webView->selectedText(); }
   public slots:
+    void applyConfig();
     void goHome();
     void newTextSearch();
     // NOTE: findHelpFor( class ) is used as a fallback in case SCDoc's

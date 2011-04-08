@@ -28,6 +28,7 @@
 #include <ktexteditor/view.h>
 #include <ktexteditor/document.h>
 #include <klocalizedstring.h>
+#include <kconfiggroup.h>
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -40,7 +41,6 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
     : Kate::PluginView( mainWin ),
     plugin( plugin_ ),
     outputToolView(0),
-    maxOutBlocks(500),
     helpToolView(0),
     helpWidget(0)
 {
@@ -112,6 +112,8 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   outputToolView = createOutputView();
   helpToolView = createHelpView();
 
+  connect( plugin, SIGNAL(configChanged()), this, SLOT(applyConfig()) );
+
   connect( aLangSwitch, SIGNAL( triggered(bool) ), plugin, SLOT( switchLang(bool) ) );
   connect( aLangRestart, SIGNAL( triggered(bool) ), plugin, SLOT( restartLang() ) );
   connect( aSynthStart, SIGNAL( triggered(bool) ), plugin, SLOT( startServer() ) );
@@ -136,8 +138,19 @@ ScateView::~ScateView()
   delete helpToolView;
 }
 
+void ScateView::applyConfig()
+{
+  if( scOutView ) {
+    KConfigGroup config(KGlobal::config(), "Scate");
+    scOutView->document()->setMaximumBlockCount( config.readEntry( "TerminalMaxRows", 500 ) );
+    scOutView->document()->setDefaultFont( config.readEntry( "TerminalFont", QFont() ) );
+  }
+}
+
 QWidget * ScateView::createOutputView()
 {
+  KConfigGroup config(KGlobal::config(), "Scate");
+
   QWidget *toolView = mainWindow()->createToolView(
     "SC Terminal",
     Kate::MainWindow::Right,
@@ -147,7 +160,8 @@ QWidget * ScateView::createOutputView()
 
   scOutView = new QTextEdit;
   scOutView->setReadOnly( true );
-  scOutView->document()->setMaximumBlockCount( maxOutBlocks );
+  scOutView->document()->setMaximumBlockCount( config.readEntry( "TerminalMaxRows", 500 ) );
+  scOutView->document()->setDefaultFont( config.readEntry( "TerminalFont", QFont() ) );
   connect( plugin, SIGNAL( scSaid( const QString& ) ),
            this, SLOT( scSaid( const QString& ) ) );
 
@@ -182,7 +196,7 @@ QWidget * ScateView::createHelpView()
     "SC Help"
   );
 
-  helpWidget = new ScateHelpBrowser( toolView );
+  helpWidget = new ScateHelpBrowser( plugin, toolView );
 
   return toolView;
 }

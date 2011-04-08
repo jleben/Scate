@@ -21,44 +21,128 @@
 
 
 #include "ScateConfigPage.hpp"
+#include "ScatePlugin.hpp"
 
 #include <klocale.h>
 #include <kconfiggroup.h>
 #include <kglobal.h>
 #include <kicon.h>
 
+#include <QTabWidget>
 #include <QFormLayout>
+#include <QGroupBox>
+#include <QVBoxLayout>
 #include <QLabel>
 #include <QToolBar>
 #include <QAction>
 
 /*********************** CONFIG ******************************/
 
-ScateConfigPage::ScateConfigPage( ScatePlugin *, QWidget *parent )
-  : Kate::PluginConfigPage( parent )
+ScateConfigPage::ScateConfigPage( ScatePlugin *plugin_, QWidget *parent )
+  : Kate::PluginConfigPage( parent ), plugin(plugin_)
 {
-  QFormLayout *layout = new QFormLayout( this );
+  QTabWidget *tabs = new QTabWidget;
 
-  sclangExeEdit = new QLineEdit();
-  layout->addRow( new QLabel( i18n( "Sclang Command" ) ),
-                  sclangExeEdit );
+  // Programs tab
 
-  dataDirEdit = new QLineEdit();
-  layout->addRow( new QLabel( i18n( "Runtime Data Directory" ) ),
-                  dataDirEdit );
+    // Sclang group
+
+    sclangExeEdit = new QLineEdit();
+    dataDirEdit = new QLineEdit();
+    startLangCheck = new QCheckBox( "Start With Scate" );
+
+    QFormLayout *sclangForm = new QFormLayout();
+    sclangForm->setContentsMargins(0,0,0,0);
+    sclangForm->addRow( new QLabel( i18n( "Command:" ) ),
+                        sclangExeEdit );
+    sclangForm->addRow( new QLabel( i18n( "Runtime Directory:" ) ),
+                        dataDirEdit );
+
+    QVBoxLayout *sclangVBox = new QVBoxLayout();
+    sclangVBox->addLayout( sclangForm );
+    sclangVBox->addWidget( startLangCheck );
+
+    QGroupBox *sclangGrp = new QGroupBox( "Sclang" );
+    sclangGrp->setLayout( sclangVBox );
+
+    // GUI group
+
+    swingOscDirEdit = new QLineEdit();
+
+    QFormLayout *guiForm = new QFormLayout();
+    guiForm->addRow( new QLabel( i18n( "SwingOSC Program:" ) ),
+                      swingOscDirEdit );
+
+    QGroupBox *guiGrp = new QGroupBox( "SuperCollider GUI" );
+    guiGrp->setLayout( guiForm );
+
+
+  QVBoxLayout * progVBox = new QVBoxLayout();
+  progVBox->addWidget( sclangGrp );
+  progVBox->addWidget( guiGrp );
+  progVBox->addStretch(1);
+
+  QWidget *progTab = new QWidget();
+  progTab->setLayout( progVBox );
+
+  // Terminal tab
+
+  trmMaxRowSpin = new QSpinBox();
+  trmMaxRowSpin->setRange( 10, 1000 );
+  trmFontCombo = new QFontComboBox();
+  trmFontSizeSpin = new QSpinBox();
+  trmFontSizeSpin->setRange( 1, 30 );
+
+  QFormLayout *trmForm = new QFormLayout();
+  trmForm->addRow( new QLabel("Maximum Rows:"), trmMaxRowSpin );
+
+  QHBoxLayout *trmFontHBox = new QHBoxLayout();
+  trmFontHBox->setContentsMargins(0,0,0,0);
+  trmFontHBox->addWidget( trmFontCombo );
+  trmFontHBox->addWidget( new QLabel("Size:") );
+  trmFontHBox->addWidget( trmFontSizeSpin );
+
+  trmForm->addRow( new QLabel("Font:"), trmFontHBox );
+
+  QWidget *trmTab = new QWidget();
+  trmTab->setLayout( trmForm );
+
+  // Help tab
 
   helpDirList = new ScateDirListWidget();
-  layout->addRow( new QLabel( i18n( "Help File Directories" ) ),
-                  helpDirList );
+  helpFontScaleSpin = new QDoubleSpinBox();
+  helpFontScaleSpin->setRange( 0.1, 10.0 );
+  helpFontScaleSpin->setDecimals(1);
+  helpFontScaleSpin->setSingleStep(0.1);
 
-  swingOscDirEdit = new QLineEdit();
-  layout->addRow( new QLabel( i18n( "SwingOSC Java Program" ) ),
-                  swingOscDirEdit );
+  QFormLayout *helpForm = new QFormLayout();
+  helpForm->addRow( new QLabel("Locations:"),
+                    helpDirList );
+  helpForm->addRow( new QLabel("Text Scaling:"),
+                    helpFontScaleSpin );
 
-  startLangCheck = new QCheckBox( );
-  layout->addRow( new QLabel( i18n( "Start Interpreter With Plugin" ) ),
-                  startLangCheck );
+  QWidget *helpTab = new QWidget();
+  helpTab->setLayout( helpForm );
+
+  // Top layout
+
+  tabs->addTab( progTab, "Programs" );
+  tabs->addTab( trmTab, "Terminal" );
+  tabs->addTab( helpTab, "Help && Documentation" );
+
+  QVBoxLayout *layout = new QVBoxLayout( this );
+  layout->addWidget( tabs );
+
   reset();
+
+  connect( sclangExeEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
+  connect( dataDirEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
+  connect( startLangCheck, SIGNAL(stateChanged()), this, SIGNAL(changed()) );
+  connect( swingOscDirEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
+  connect( trmMaxRowSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
+  connect( trmFontCombo, SIGNAL(currentFontChanged()), this, SIGNAL(changed()) );
+  connect( trmFontSizeSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
+  connect( helpFontScaleSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
 }
 
 void ScateConfigPage::apply()
@@ -66,10 +150,20 @@ void ScateConfigPage::apply()
   KConfigGroup config(KGlobal::config(), "Scate");
   config.writeEntry( "ScLangExecutable", sclangExeEdit->text() );
   config.writeEntry( "RuntimeDataDir", dataDirEdit->text() );
-  config.writePathEntry( "HelpDirs", helpDirList->dirs() );
-  config.writeEntry( "SwingOscProgram", swingOscDirEdit->text() );
   config.writeEntry( "StartLang", startLangCheck->isChecked() );
+  config.writeEntry( "SwingOscProgram", swingOscDirEdit->text() );
+
+  config.writeEntry( "TerminalMaxRows", trmMaxRowSpin->value() );
+  QFont trmFont = trmFontCombo->currentFont();
+  trmFont.setPointSize( trmFontSizeSpin->value() );
+  config.writeEntry( "TerminalFont", trmFont );
+
+  config.writePathEntry( "HelpDirs", helpDirList->dirs() );
+  config.writeEntry( "HelpFontScale", helpFontScaleSpin->value() );
+
   config.sync();
+
+  plugin->applyConfig();
 }
 
 void ScateConfigPage::reset()
@@ -77,25 +171,44 @@ void ScateConfigPage::reset()
   KConfigGroup config(KGlobal::config(), "Scate");
   sclangExeEdit->setText( config.readEntry( "ScLangExecutable", QString() ) );
   dataDirEdit->setText( config.readEntry( "RuntimeDataDir", QString() ) );
-  helpDirList->setDirs( config.readEntry( "HelpDirs", QStringList() ) );
-  swingOscDirEdit->setText( config.readEntry( "SwingOscProgram", QString() ) );
   startLangCheck->setChecked( config.readEntry( "StartLang", false ) );
+  swingOscDirEdit->setText( config.readEntry( "SwingOscProgram", QString() ) );
+
+  trmMaxRowSpin->setValue( config.readEntry( "TerminalMaxRows", 500 ) );
+  QFont trmFont = config.readEntry( "TerminalFont", QFont() );
+  trmFontCombo->setCurrentFont( trmFont );
+  trmFontSizeSpin->setValue( trmFont.pointSize() );
+
+  helpDirList->setDirs( config.readEntry( "HelpDirs", QStringList() ) );
+  helpFontScaleSpin->setValue( config.readEntry( "HelpFontScale", 1.0 ) );
 }
 
 void ScateConfigPage::defaults()
 {
   sclangExeEdit->clear();
   dataDirEdit->setText( QString() );
-  helpDirList->setDirs( QStringList() );
-  swingOscDirEdit->clear();
   startLangCheck->setChecked( false );
+  swingOscDirEdit->clear();
+
+  trmMaxRowSpin->setValue(500);
+  QFont defFont;
+  trmFontCombo->setCurrentFont( defFont );
+  trmFontSizeSpin->setValue( defFont.pointSize() );
+
+  helpDirList->setDirs( QStringList() );
+  helpFontScaleSpin->setValue(1.0);
 
   KConfigGroup config(KGlobal::config(), "scate");
   config.writeEntry( "ScLangExecutable", QString() );
   config.writeEntry( "RuntimeDataDir", QString() );
-  config.writePathEntry( "HelpDirs", QStringList() );
   config.writeEntry( "SwingOscProgram", QString() );
   config.writeEntry( "StartLang", false );
+
+  config.writeEntry( "TerminalMaxRows", 500 );
+  config.writeEntry( "TerminalFont", defFont );
+
+  config.writePathEntry( "HelpDirs", QStringList() );
+  config.writeEntry( "HelpFontScale", 1.0 );
 }
 
 ScateDirListWidget::ScateDirListWidget( QWidget *parent ) :
@@ -156,3 +269,4 @@ QStringList ScateDirListWidget::dirs()
   }
   return dirs;
 }
+
