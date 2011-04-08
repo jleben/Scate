@@ -65,6 +65,8 @@ class ScateDirListWidget : public QWidget
     ScateDirListWidget( QWidget *parent = 0 );
     void setDirs( const QStringList & );
     QStringList dirs();
+  signals:
+    void changed();
   public slots:
     void addDir();
     void removeDir();

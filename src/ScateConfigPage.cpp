@@ -135,14 +135,15 @@ ScateConfigPage::ScateConfigPage( ScatePlugin *plugin_, QWidget *parent )
 
   reset();
 
-  connect( sclangExeEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
-  connect( dataDirEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
-  connect( startLangCheck, SIGNAL(stateChanged()), this, SIGNAL(changed()) );
-  connect( swingOscDirEdit, SIGNAL(editingFinished()), this, SIGNAL(changed()) );
-  connect( trmMaxRowSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
-  connect( trmFontCombo, SIGNAL(currentFontChanged()), this, SIGNAL(changed()) );
-  connect( trmFontSizeSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
-  connect( helpFontScaleSpin, SIGNAL(valueChanged()), this, SIGNAL(changed()) );
+  connect( sclangExeEdit, SIGNAL(textChanged(QString)), this, SIGNAL(changed()) );
+  connect( dataDirEdit, SIGNAL(textChanged(QString)), this, SIGNAL(changed()) );
+  connect( startLangCheck, SIGNAL(stateChanged(int)), this, SIGNAL(changed()) );
+  connect( swingOscDirEdit, SIGNAL(textChanged(QString)), this, SIGNAL(changed()) );
+  connect( trmMaxRowSpin, SIGNAL(valueChanged(int)), this, SIGNAL(changed()) );
+  connect( trmFontCombo, SIGNAL(currentFontChanged(QFont)), this, SIGNAL(changed()) );
+  connect( trmFontSizeSpin, SIGNAL(valueChanged(int)), this, SIGNAL(changed()) );
+  connect( helpDirList, SIGNAL(changed()), this, SIGNAL(changed()) );
+  connect( helpFontScaleSpin, SIGNAL(valueChanged(double)), this, SIGNAL(changed()) );
 }
 
 void ScateConfigPage::apply()
@@ -233,6 +234,8 @@ ScateDirListWidget::ScateDirListWidget( QWidget *parent ) :
   l->addWidget( tools );
 
   setLayout( l );
+
+  connect( list, SIGNAL(itemChanged(QListWidgetItem*)), this, SIGNAL(changed()) );
 }
 
 void ScateDirListWidget::setDirs( const QStringList &dirs )
@@ -252,11 +255,16 @@ void ScateDirListWidget::addDir()
   list->addItem( item );
   list->setCurrentItem( item );
   list->editItem( item );
+  emit changed();
 }
 
 void ScateDirListWidget::removeDir()
 {
-  delete list->currentItem();
+  QListWidgetItem *item = list->currentItem();
+  if( item ) {
+    delete item;
+    emit changed();
+  }
 }
 
 QStringList ScateDirListWidget::dirs()
