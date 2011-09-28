@@ -47,7 +47,7 @@ void SCProcess::onReadyRead()
 K_PLUGIN_FACTORY_DEFINITION(ScatePluginFactory, registerPlugin<ScatePlugin>();)
 K_EXPORT_PLUGIN( ScatePluginFactory( KAboutData("katescateplugin", 0,
                                                 ki18n("Scate"),
-                                                "0.9.2",
+                                                "0.9.5-dev",
                                                 ki18n("Kate SuperCollider plugin") ) ) )
 
 ScatePlugin::ScatePlugin( QObject* parent, const QList<QVariant>& )
