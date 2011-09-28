@@ -33,21 +33,15 @@ if( NOT KATE_SDK_FOUND )
 
   message( STATUS "Missing Kate development files; building with project-provided" )
 
-  find_file( LIB_KATE_INTERFACES_4 libkateinterfaces.so.4 PATHS ${CMAKE_SYSTEM_LIBRARY_PATH} )
-  if( NOT LIB_KATE_INTERFACES_4 )
-    message( FATAL_ERROR "Missing: libkateinterfaces.so.4")
-  endif( NOT LIB_KATE_INTERFACES_4 )
+  find_file( LIB_KATE_INTERFACES libkateinterfaces.so.4 PATHS ${CMAKE_SYSTEM_LIBRARY_PATH} )
 
-  message( STATUS "Found Kate Interfaces 4.x library : ${LIB_KATE_INTERFACES_4}" )
+  if( NOT LIB_KATE_INTERFACES )
+    message( FATAL_ERROR "Missing kateinterfaces library. Can not proceed.")
+  endif( NOT LIB_KATE_INTERFACES )
 
-  add_custom_target( ln_kateinterfaces
-    COMMAND mkdir -p kate/lib
-    COMMAND ln -sfv ${LIB_KATE_INTERFACES_4} kate/lib/libkateinterfaces.so
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  )
+  message( STATUS "Found kateinterfaces library : ${LIB_KATE_INTERFACES}" )
 
   include_directories( ${CMAKE_SOURCE_DIR}/kate/include/ )
-  link_directories( ${CMAKE_BINARY_DIR}/kate/lib/ )
 
 endif( NOT KATE_SDK_FOUND )
 
@@ -62,11 +56,13 @@ set( SCATE_SOURCES
 )
 
 kde4_add_plugin( katescateplugin ${SCATE_SOURCES} )
-target_link_libraries( katescateplugin QtWebKit ${KDE4_KDEUI_LIBS} kateinterfaces ktexteditor kparts )
+target_link_libraries( katescateplugin QtWebKit ${KDE4_KDEUI_LIBS} ktexteditor kparts )
 
-if( NOT KATE_SDK_FOUND )
-  add_dependencies( katescateplugin ln_kateinterfaces )
-endif( NOT KATE_SDK_FOUND )
+if( KATE_SDK_FOUND )
+  target_link_libraries( katescateplugin kateinterfaces )
+else()
+  target_link_libraries( katescateplugin ${LIB_KATE_INTERFACES} )
+endif()
 
 ########### install files ###############
 install( TARGETS katescateplugin  DESTINATION ${PLUGIN_INSTALL_DIR} )
