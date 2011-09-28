@@ -26,6 +26,8 @@
 #include <kaboutdata.h>
 #include <kstandarddirs.h>
 #include <kconfiggroup.h>
+#include <kate/application.h>
+#include <kate/documentmanager.h>
 
 #include <cstdio>
 
@@ -59,6 +61,8 @@ ScatePlugin::ScatePlugin( QObject* parent, const QList<QVariant>& )
            this, SLOT( scFinished( int, QProcess::ExitStatus ) ) );
   connect( scProcess, SIGNAL( scSays( const QString& ) ),
            this, SIGNAL( scSaid( const QString& ) ) );
+  connect( application()->documentManager(), SIGNAL(documentCreated (KTextEditor::Document *)),
+           this, SLOT(onDocumentCreated(KTextEditor::Document *)) );
   KConfigGroup config(KGlobal::config(), "Scate");
   bool b_startLang = config.readEntry( "StartLang", false );
   if( b_startLang )
@@ -186,6 +190,12 @@ void ScatePlugin::startSwingOSC()
 void ScatePlugin::stopSwingOSC()
 {
   eval( "SwingOSC.default.quit;", true );
+}
+
+void ScatePlugin::onDocumentCreated( KTextEditor::Document *doc )
+{
+  if( doc->highlightingMode() == "None" )
+    doc->setHighlightingMode("SuperCollider");
 }
 
 void ScatePlugin::switchLang( bool on )

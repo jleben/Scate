@@ -23,6 +23,7 @@
 #define SCATE_PLUGIN_H
 
 #include <kpluginfactory.h>
+#include <ktexteditor/document.h>
 #include <kate/plugin.h>
 #include <kate/pluginconfigpageinterface.h>
 
@@ -62,6 +63,7 @@ class  ScatePlugin :
     void configChanged();
 
   public slots:
+    void onDocumentCreated(KTextEditor::Document *);
     void switchLang( bool );
     void switchServer( bool );
     void switchSwingOsc( bool );
