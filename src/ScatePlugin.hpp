@@ -68,6 +68,7 @@ class  ScatePlugin :
     void switchServer( bool );
     void switchSwingOsc( bool );
     void restartLang();
+    void recompileLibrary();
     void startServer();
     void stopServer();
     void startSwingOSC();

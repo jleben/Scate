@@ -58,7 +58,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
 
   aLangRestart = a = actionCollection()->addAction( "scate_lang_restart" );
   a->setIcon( KIcon("system-reboot") );
-  a->setText( i18n("Reboot") );
+  a->setText( i18n("Recompile") );
   langDepActions.append(a);
 
   aSynthStart = a = actionCollection()->addAction( "scate_synth_start" );
@@ -115,7 +115,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   connect( plugin, SIGNAL(configChanged()), this, SLOT(applyConfig()) );
 
   connect( aLangSwitch, SIGNAL( triggered(bool) ), plugin, SLOT( switchLang(bool) ) );
-  connect( aLangRestart, SIGNAL( triggered(bool) ), plugin, SLOT( restartLang() ) );
+  connect( aLangRestart, SIGNAL( triggered(bool) ), plugin, SLOT( recompileLibrary() ) );
   connect( aSynthStart, SIGNAL( triggered(bool) ), plugin, SLOT( startServer() ) );
   connect( aSynthStop, SIGNAL( triggered(bool) ), plugin, SLOT( stopServer() ) );
   connect( aSwingStart, SIGNAL( triggered(bool) ), plugin, SLOT( startSwingOSC() ) );

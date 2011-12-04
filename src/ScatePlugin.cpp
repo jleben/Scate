@@ -248,6 +248,11 @@ void ScatePlugin::restartLang()
   stopLang();
 }
 
+void ScatePlugin::recompileLibrary()
+{
+  scProcess->write( "\x18" );
+}
+
 bool ScatePlugin::langRunning()
 { return scProcess->state() != QProcess::NotRunning; }
 
