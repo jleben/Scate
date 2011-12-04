@@ -132,7 +132,7 @@ void ScatePlugin::startLang()
 
 void ScatePlugin::stopLang()
 {
-  scProcess->terminate();
+  scProcess->closeWriteChannel();
 }
 
 void ScatePlugin::sysMsg( const QString &msg )
