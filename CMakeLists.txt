@@ -25,6 +25,7 @@ set( CMAKE_MODULE_PATH
 )
 
 find_package( KDE4 REQUIRED )
+
 include_directories( ${KDE4_INCLUDES} )
 
 find_package( KateSDK )
@@ -46,6 +47,7 @@ if( NOT KATE_SDK_FOUND )
 endif( NOT KATE_SDK_FOUND )
 
 set( QT_USE_QTWEBKIT TRUE )
+include(${QT_USE_FILE})
 
 set( SCATE_SOURCES
   src/cmdline.cpp
@@ -56,7 +58,8 @@ set( SCATE_SOURCES
 )
 
 kde4_add_plugin( katescateplugin ${SCATE_SOURCES} )
-target_link_libraries( katescateplugin QtWebKit ${KDE4_KDEUI_LIBS} ktexteditor kparts )
+
+target_link_libraries( katescateplugin ${QT_LIBRARIES} ${KDE4_KDEUI_LIBS} ${KDE4_KPARTS_LIBS} ${KDE4_KTEXTEDITOR_LIBS} )
 
 if( KATE_SDK_FOUND )
   target_link_libraries( katescateplugin kateinterfaces )
