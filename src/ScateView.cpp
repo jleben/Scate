@@ -48,7 +48,7 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   setXMLFile( "kate/plugins/katescate/ui.rc" );
 
   KAction *a;
-  KAction *aLangRestart, *aSynthStart, *aSynthStop, *aGuiQt, *aGuiSwing,
+  KAction *aLangRestart, *aSynthStart, *aSynthStop,
   *aSwingStart, *aSwingStop, *aEval, *aStopProc, *aHelp;
 
   aLangSwitch = a = actionCollection()->addAction( "scate_lang_switch" );
@@ -69,11 +69,11 @@ ScateView::ScateView( ScatePlugin *plugin_, Kate::MainWindow *mainWin )
   a->setText( i18n("Shutdown Synth") );
   langDepActions.append(a);
 
-  aGuiQt = a = actionCollection()->addAction( "scate_gui_qt", plugin, SLOT(switchToQt()) );
+  a = actionCollection()->addAction( "scate_gui_qt", plugin, SLOT(switchToQt()) );
   a->setText( i18n("Qt") );
   langDepActions.append(a);
 
-  aGuiSwing = a = actionCollection()->addAction( "scate_gui_swing", plugin, SLOT(switchToSwing()) );
+  a = actionCollection()->addAction( "scate_gui_swing", plugin, SLOT(switchToSwing()) );
   a->setText( i18n("SwingOSC") );
   langDepActions.append(a);
 
