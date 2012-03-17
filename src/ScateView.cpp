@@ -34,6 +34,7 @@
 #include <QLabel>
 #include <QKeyEvent>
 #include <QToolBar>
+#include <QTextBlock>
 
 using namespace Scate;
 
@@ -158,12 +159,18 @@ QWidget * ScateView::createOutputView()
     "SC Terminal"
   );
 
-  scOutView = new QTextEdit;
+  QFont defaultFont("monospace");
+  defaultFont.setStyleHint(QFont::TypeWriter);
+
+  scOutView = new QPlainTextEdit;
   scOutView->setReadOnly( true );
   scOutView->document()->setMaximumBlockCount( config.readEntry( "TerminalMaxRows", 500 ) );
-  scOutView->document()->setDefaultFont( config.readEntry( "TerminalFont", QFont() ) );
+  scOutView->document()->setDefaultFont( config.readEntry( "TerminalFont", defaultFont ) );
+  scOutView->setTabStopWidth(20);
   connect( plugin, SIGNAL( scSaid( const QString& ) ),
            this, SLOT( scSaid( const QString& ) ) );
+
+  new PostSyntaxHighlighter(scOutView->document());
 
   cmdLine = new CmdLine( "Code:", 30 );
   connect( cmdLine, SIGNAL( invoked( const QString&, bool ) ),
@@ -276,4 +283,15 @@ void ScateView::writeSessionConfig( KConfigBase* config, const QString& groupPre
   // see the Kate::Plugin docs for more information.
   Q_UNUSED( config );
   Q_UNUSED( groupPrefix );
+}
+
+void PostSyntaxHighlighter::highlightBlock ( const QString & text )
+{
+    if (text.startsWith("ERROR", Qt::CaseInsensitive)) {
+        QTextBlock b(currentBlock());
+        QTextBlockFormat fm(b.blockFormat());
+        fm.setBackground(Qt::red);
+        QTextCursor c(b);
+        c.setBlockFormat(fm);
+    }
 }

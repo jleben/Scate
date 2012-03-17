@@ -28,8 +28,9 @@
 #include <kate/plugin.h>
 #include <kate/mainwindow.h>
 
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QLineEdit>
+#include <QSyntaxHighlighter>
 
 class ScatePlugin;
 class ScateHelpWidget;
@@ -61,7 +62,7 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     ScatePlugin *plugin;
 
     QWidget *outputToolView;
-    QTextEdit *scOutView;
+    QPlainTextEdit *scOutView;
     Scate::CmdLine *cmdLine;
 
     QWidget *helpToolView;
@@ -71,6 +72,13 @@ class ScateView : public Kate::PluginView, public KXMLGUIClient
     QList<QAction*> langDepActions;
 
     QAction *aClearOutput;
+};
+
+class PostSyntaxHighlighter : QSyntaxHighlighter
+{
+public:
+    PostSyntaxHighlighter(QTextDocument *doc) : QSyntaxHighlighter(doc) {}
+    void highlightBlock ( const QString & );
 };
 
 #endif //SCATE_VIEW_H
