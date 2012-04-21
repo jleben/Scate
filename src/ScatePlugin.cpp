@@ -40,8 +40,7 @@ void SCProcess::onReadyRead()
 {
   QByteArray bytes = readAll();
   if( bytes.isEmpty() ) return;
-  QString text( bytes );
-  emit scSays( text );
+  emit scSays( QString::fromUtf8(bytes) );
 }
 
 K_PLUGIN_FACTORY_DEFINITION(ScatePluginFactory, registerPlugin<ScatePlugin>();)
@@ -239,7 +238,7 @@ void ScatePlugin::eval( const QString& cmd, bool silent )
   }
 
   QString str = cmd + ( silent ? "\x1b" : "\x0c" );
-  scProcess->write( str.toAscii() );
+  scProcess->write( str.toUtf8() );
 }
 
 void ScatePlugin::restartLang()
